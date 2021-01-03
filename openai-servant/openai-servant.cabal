@@ -1,0 +1,48 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.33.0.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: 7d9611438da3fd219c80f23301bed8d6b0ed55b71c59d82b976a6e0704630db3
+
+name:           openai-servant
+version:        0.1.0.0
+synopsis:       Unofficial OpenAI servant types
+description:    Unofficial description of the OpenAI API using servant types
+category:       Web
+homepage:       https://github.com/agrafix/openai-hs#readme
+bug-reports:    https://github.com/agrafix/openai-hs/issues
+author:         Alexander Thiemann <mail@thiemann.at>
+maintainer:     Alexander Thiemann <mail@thiemann.at>
+copyright:      2021 Alexander Thiemann <mail@thiemann.at>
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+
+source-repository head
+  type: git
+  location: https://github.com/agrafix/openai-hs
+
+library
+  exposed-modules:
+      OpenAI.Api
+      OpenAI.Internal.Aeson
+      OpenAI.Resources
+  other-modules:
+      Paths_openai_servant
+  hs-source-dirs:
+      src
+  default-extensions: OverloadedStrings DataKinds TypeOperators TypeFamilies GADTs FlexibleInstances FlexibleContexts MultiParamTypeClasses StrictData ScopedTypeVariables DeriveGeneric DeriveFunctor
+  ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , casing
+    , servant
+    , text
+    , time
+    , vector
+  default-language: Haskell2010

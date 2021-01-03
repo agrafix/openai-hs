@@ -1,0 +1,94 @@
+# adapted from simonmichael/hledger
+
+name: push CI
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        plan:
+          - { ghc: "8_8_4" , stack: "stack --stack-yaml=stack.yaml" }
+
+    steps:
+
+    - name: Check out
+      uses: actions/checkout@v2
+
+    # things to be cached/restored:
+
+    - name: Cache stack global package db
+      id:   stack-global
+      uses: actions/cache@v2
+      with:
+        path: ~/.stack
+        key: ${{ runner.os }}-stack-global-${{ matrix.plan.ghc }}-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-global-${{ matrix.plan.ghc }}
+
+    - name: Cache stack-installed programs in ~/.local/bin
+      id:   stack-programs
+      uses: actions/cache@v2
+      with:
+        path: ~/.local/bin
+        key: ${{ runner.os }}-stack-programs-${{ matrix.plan.ghc }}-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-programs-${{ matrix.plan.ghc }}
+
+    - name: Cache .stack-work
+      uses: actions/cache@v2
+      with:
+        path: .stack-work
+        key: ${{ runner.os }}-stack-work-${{ matrix.plan.ghc }}-${{ hashFiles('**.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-stack-work-${{ matrix.plan.ghc }}
+
+    - name: Cache openai-hs/.stack-work
+      uses: actions/cache@v2
+      with:
+        path: openai-hs/.stack-work
+        key: ${{ runner.os }}-openai-hs-stack-work-${{ matrix.plan.ghc }}-${{ hashFiles('openai-hs/package.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-openai-hs-stack-work-${{ matrix.plan.ghc }}
+
+    - name: Cache openai-servant/.stack-work
+      uses: actions/cache@v2
+      with:
+        path: openai-servant/.stack-work
+        key: ${{ runner.os }}-openai-servant-stack-work-${{ matrix.plan.ghc }}-${{ hashFiles('openai-servant/package.yaml') }}
+        restore-keys: |
+             ${{ runner.os }}-openai-servant-stack-work-${{ matrix.plan.ghc }}
+
+    # actions:
+
+    - name: Install stack
+      run: |
+        mkdir -p ~/.local/bin
+        export PATH=~/.local/bin:$PATH
+        if [[ ! -x ~/.local/bin/stack ]]; then curl -sL https://get.haskellstack.org/stable/linux-x86_64.tar.gz | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'; chmod a+x ~/.local/bin/stack; fi
+        stack --version
+
+    - name: Install GHC
+      env:
+        stack: ${{ matrix.plan.stack }}
+      run: |
+        $stack setup --install-ghc
+
+    - name: Install haskell deps
+      env:
+        stack: ${{ matrix.plan.stack }}
+      run: |
+        $stack build --only-dependencies
+
+    - name: Build everything fast
+      env:
+        stack: ${{ matrix.plan.stack }}
+      run: |
+        $stack build --fast --pedantic --force-dirty
+
+# TODO: run the tests! needs openai secrets

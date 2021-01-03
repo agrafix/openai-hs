@@ -1,0 +1,47 @@
+name:                openai-servant
+version:             0.1.0.0
+github:              "agrafix/openai-hs"
+license:             BSD3
+author:              "Alexander Thiemann <mail@thiemann.at>"
+maintainer:          "Alexander Thiemann <mail@thiemann.at>"
+copyright:           "2021 Alexander Thiemann <mail@thiemann.at>"
+
+extra-source-files:
+  - README.md
+
+synopsis:            Unofficial OpenAI servant types
+category:            Web
+
+description:         Unofficial description of the OpenAI API using servant types
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - casing
+  - text
+  - servant
+  - time
+  - vector
+
+ghc-options:
+  - -Wall
+  - -fwarn-tabs
+  - -fwarn-incomplete-uni-patterns
+  - -fwarn-incomplete-record-updates
+
+default-extensions:
+  - OverloadedStrings
+  - DataKinds
+  - TypeOperators
+  - TypeFamilies
+  - GADTs
+  - FlexibleInstances
+  - FlexibleContexts
+  - MultiParamTypeClasses
+  - StrictData
+  - ScopedTypeVariables
+  - DeriveGeneric
+  - DeriveFunctor
+
+library:
+  source-dirs: src

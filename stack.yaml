@@ -1,0 +1,7 @@
+resolver:
+  url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/26.yaml
+packages:
+  - openai-hs
+  - openai-servant
+extra-deps:
+  - timespan-0.4.0.0@sha256:0652f1328e43a9b62345fce29370d8a263f1fdfa71a52e3771743325beaa562d,884

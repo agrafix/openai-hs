@@ -1,0 +1,10 @@
+cradle:
+  stack:
+    stackYaml: "stack.yaml"
+    components:
+      - path: "./openai-servant/src"
+        component: "openai-servant:lib"
+      - path: "./openai-hs/src"
+        component: "openai-hs:lib"
+      - path: "./openai-hs/test"
+        component: "openai-hs:test:openai-hs-test"

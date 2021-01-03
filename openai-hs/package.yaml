@@ -1,0 +1,67 @@
+name:                openai-hs
+version:             0.1.1.0
+github:              "agrafix/openai-hs"
+license:             BSD3
+author:              "Alexander Thiemann <mail@thiemann.at>"
+maintainer:          "Alexander Thiemann <mail@thiemann.at>"
+copyright:           "2021 Alexander Thiemann <mail@thiemann.at>"
+
+extra-source-files:
+  - README.md
+
+synopsis:            Unofficial OpenAI client
+category:            Web
+
+description:         Unofficial OpenAI client
+
+dependencies:
+  - base >= 4.7 && < 5
+  - aeson
+  - casing
+  - text
+  - servant
+  - servant-client
+  - openai-servant
+  - http-client
+  - cpphs
+  - http-types
+
+ghc-options:
+  - -Wall
+  - -fwarn-tabs
+  - -fwarn-incomplete-uni-patterns
+  - -fwarn-incomplete-record-updates
+
+default-extensions:
+  - OverloadedStrings
+  - DataKinds
+  - TypeOperators
+  - TypeFamilies
+  - GADTs
+  - FlexibleInstances
+  - FlexibleContexts
+  - MultiParamTypeClasses
+  - StrictData
+  - ScopedTypeVariables
+  - DeriveGeneric
+  - DeriveFunctor
+
+library:
+  source-dirs: src
+
+tests:
+  openai-hs-test:
+    main:                Spec.hs
+    source-dirs:         test
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - openai-hs
+      - hspec
+      - http-client-tls
+      - vector
+      - bytestring
+      - containers
+      - servant-client-core
