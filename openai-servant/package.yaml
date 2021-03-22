@@ -1,5 +1,5 @@
 name:                openai-servant
-version:             0.1.0.0
+version:             0.2.0.0
 github:              "agrafix/openai-hs"
 license:             BSD3
 author:              "Alexander Thiemann <mail@thiemann.at>"
@@ -20,6 +20,8 @@ dependencies:
   - casing
   - text
   - servant
+  - servant-multipart
+  - bytestring
   - time
   - vector
 

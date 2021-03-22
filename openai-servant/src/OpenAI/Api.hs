@@ -5,6 +5,7 @@ module OpenAI.Api where
 import OpenAI.Resources
 
 import Servant.API
+import Servant.Multipart
 
 type OpenAIAuth = BasicAuth "OpenAI API" ()
 
@@ -13,6 +14,15 @@ type OpenAIApi
 
 type OpenAIApiInternal
   = "engines" :> EnginesApi
+  :<|> "files" :> FilesApi
+  :<|> AnswerApi
+
+type FilesApi
+  = OpenAIAuth :> MultipartForm Mem FileCreate :> Post '[JSON] File
+  :<|> OpenAIAuth :> Capture "file_id" FileId :> Delete '[JSON] FileDeleteConfirmation
+
+type AnswerApi
+  = "answers" :> OpenAIAuth :> ReqBody '[JSON] AnswerReq :> Post '[JSON] AnswerResp
 
 type EnginesApi
   = OpenAIAuth :> Get '[JSON] (OpenAIList Engine)

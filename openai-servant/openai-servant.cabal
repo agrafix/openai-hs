@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7d9611438da3fd219c80f23301bed8d6b0ed55b71c59d82b976a6e0704630db3
+-- hash: 0f47df90d0a45b723d7b0b77c3679bccd709f8c989a14ca39f9c4f7abb0f4f08
 
 name:           openai-servant
-version:        0.1.0.0
+version:        0.2.0.0
 synopsis:       Unofficial OpenAI servant types
 description:    Unofficial description of the OpenAI API using servant types
 category:       Web
@@ -40,8 +40,10 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
     , casing
     , servant
+    , servant-multipart
     , text
     , time
     , vector

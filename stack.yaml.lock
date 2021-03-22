@@ -11,6 +11,13 @@ packages:
       sha256: 74331c19fe227c1d9d2d5de1f085ce97b939c1b2080157dbf74f55098dd9be59
   original:
     hackage: timespan-0.4.0.0@sha256:0652f1328e43a9b62345fce29370d8a263f1fdfa71a52e3771743325beaa562d,884
+- completed:
+    hackage: servant-multipart-0.12@sha256:aa81dd0478270ade4a21b75611d5bc9cce8107df2e89c37b9964a3421629825d,2761
+    pantry-tree:
+      size: 386
+      sha256: 51c4e9e8be3ee80689bb6df46aee484a4f434dbeb33f4379ed8d1741fe4631cd
+  original:
+    hackage: servant-multipart-0.12@sha256:aa81dd0478270ade4a21b75611d5bc9cce8107df2e89c37b9964a3421629825d,2761
 snapshots:
 - completed:
     size: 533252

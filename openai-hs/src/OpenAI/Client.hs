@@ -16,6 +16,12 @@ module OpenAI.Client
     -- * Searching
   , SearchResult(..), SearchResultCreate(..)
   , searchDocuments
+    -- * File API
+  , FileCreate(..), File(..), FileId(..), FileHunk(..)
+  , FileDeleteConfirmation(..)
+  , createFile, deleteFile
+    -- * Answer API
+  , getAnswer, AnswerReq(..), AnswerResp(..)
   )
 where
 
@@ -27,8 +33,10 @@ import Data.Proxy
 import Network.HTTP.Client (Manager)
 import Servant.API
 import Servant.Client
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
+import qualified Servant.Multipart as MP
 
 -- | Your OpenAI API key. Can be obtained from the OpenAI dashboard. Format: @sk-<redacted>@
 type ApiKey = T.Text
@@ -77,8 +85,20 @@ EP2(searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
 EP0(listEngines, (OpenAIList Engine))
 EP(getEngine, EngineId, Engine)
 
-listEngines'
+createFile :: OpenAIClient -> FileCreate -> IO (Either ClientError File)
+createFile sc rfc =
+  do bnd <- MP.genBoundary
+     createFileInternal sc (bnd, rfc)
+
+EP(createFileInternal, (BSL.ByteString, FileCreate), File)
+EP(deleteFile, FileId, FileDeleteConfirmation)
+
+EP(getAnswer, AnswerReq, AnswerResp)
+
+(listEngines'
   :<|> getEngine'
   :<|> completeText'
-  :<|> searchDocuments'
+  :<|> searchDocuments')
+  :<|> (createFileInternal' :<|> deleteFile')
+  :<|> getAnswer'
   = client api

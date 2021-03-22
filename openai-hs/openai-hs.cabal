@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: bc145a17f925189f4d8d879579d0e37dc7d796a46ca6bb0303538c1f3f2c1f16
+-- hash: 8f7d9bff4fa5f43dad386049b3579aaa96e640a7ad21fddc4cd1338daa0c972b
 
 name:           openai-hs
-version:        0.1.1.0
+version:        0.2.0.0
 synopsis:       Unofficial OpenAI client
 description:    Unofficial OpenAI client
 category:       Web
@@ -39,6 +39,7 @@ library
   build-depends:
       aeson
     , base >=4.7 && <5
+    , bytestring
     , casing
     , cpphs
     , http-client
@@ -46,6 +47,7 @@ library
     , openai-servant
     , servant
     , servant-client
+    , servant-multipart
     , text
   default-language: Haskell2010
 
@@ -76,6 +78,7 @@ test-suite openai-hs-test
     , servant
     , servant-client
     , servant-client-core
+    , servant-multipart
     , text
     , vector
   default-language: Haskell2010

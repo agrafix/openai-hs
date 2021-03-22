@@ -10,6 +10,11 @@ module OpenAI.Resources
   , defaultTextCompletionCreate
     -- * Searching
   , SearchResult(..), SearchResultCreate(..)
+    -- * File API
+  , FileCreate(..), FileId(..), File(..), FileHunk(..)
+  , FileDeleteConfirmation(..)
+    -- * Answers API
+  , AnswerReq(..), AnswerResp(..)
   )
 where
 
@@ -18,7 +23,9 @@ import OpenAI.Internal.Aeson
 import Data.Time
 import Data.Time.Clock.POSIX
 import Servant.API
+import Servant.Multipart
 import qualified Data.Aeson as A
+import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Data.Vector as V
 
@@ -125,12 +132,73 @@ data SearchResult
   = SearchResult
   { srDocument :: Int
   , srScore :: Double
+  , srMetadata :: Maybe T.Text
   } deriving (Show, Eq)
 
 data SearchResultCreate
   = SearchResultCreate
-  { sccrDocuments :: V.Vector T.Text
+  { sccrFile :: Maybe FileId
+  , sccrDocuments :: Maybe (V.Vector T.Text)
   , sccrQuery :: T.Text
+  , sccrReturnMetadata :: Bool
+  } deriving (Show, Eq)
+
+data FileHunk
+  = FileHunk
+  { fhContent :: T.Text
+  , fhMetadata :: Maybe T.Text
+  } deriving (Show, Eq)
+
+data FileCreate
+  = FileCreate
+  { fcPurpose :: T.Text
+  , fcDocuments :: [FileHunk]
+  } deriving (Show, Eq)
+
+packDocuments :: [FileHunk] -> BSL.ByteString
+packDocuments docs =
+  BSL.intercalate "\n" $
+  map (\t -> A.encode $ A.object ["text" A..= fhContent t, "metadata" A..= fhMetadata t]) docs
+
+instance ToMultipart Mem FileCreate where
+  toMultipart rfc =
+    MultipartData
+    [ Input "purpose" (fcPurpose rfc)
+    ]
+    [ FileData "file" "data.jsonl" "application/json" (packDocuments $ fcDocuments rfc)
+    ]
+
+newtype FileId
+  = FileId { unFileId :: T.Text }
+  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+
+data File
+  = File
+  { fId :: FileId
+  , fCreatedAt :: TimeStamp
+  , fPurpose :: T.Text
+  } deriving (Show, Eq)
+
+data FileDeleteConfirmation
+  = FileDeleteConfirmation
+  { fdcId :: FileId
+  } deriving (Show, Eq)
+
+data AnswerReq
+  = AnswerReq
+  { arFile :: Maybe FileId
+  , arDocuments :: Maybe (V.Vector T.Text)
+  , arQuestion :: T.Text
+  , arSearchModel :: EngineId
+  , arModel :: EngineId
+  , arExamplesContext :: T.Text
+  , arExamples :: [[T.Text]]
+  , arReturnMetadata :: Bool
+  } deriving (Show, Eq)
+
+data AnswerResp
+  = AnswerResp
+  { arsAnswers :: [T.Text]
   } deriving (Show, Eq)
 
 $(deriveJSON (jsonOpts 2) ''OpenAIList)
@@ -140,3 +208,7 @@ $(deriveJSON (jsonOpts 3) ''TextCompletionChoice)
 $(deriveJSON (jsonOpts 4) ''TextCompletionCreate)
 $(deriveJSON (jsonOpts 2) ''SearchResult)
 $(deriveJSON (jsonOpts 4) ''SearchResultCreate)
+$(deriveJSON (jsonOpts 1) ''File)
+$(deriveJSON (jsonOpts 3) ''FileDeleteConfirmation)
+$(deriveJSON (jsonOpts 2) ''AnswerReq)
+$(deriveJSON (jsonOpts 3) ''AnswerResp)
