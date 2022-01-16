@@ -23,7 +23,7 @@ import OpenAI.Internal.Aeson
 import Data.Time
 import Data.Time.Clock.POSIX
 import Servant.API
-import Servant.Multipart
+import Servant.Multipart.API
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T

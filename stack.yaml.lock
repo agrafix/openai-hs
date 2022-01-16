@@ -12,16 +12,16 @@ packages:
   original:
     hackage: timespan-0.4.0.0@sha256:0652f1328e43a9b62345fce29370d8a263f1fdfa71a52e3771743325beaa562d,884
 - completed:
-    hackage: servant-multipart-0.12@sha256:aa81dd0478270ade4a21b75611d5bc9cce8107df2e89c37b9964a3421629825d,2761
+    hackage: servant-multipart-client-0.12.1@sha256:d043063e2f33eab86840f87c4bdb16eb3fe4a5847a0b118e4f4265cf3ba4c9b3,1892
     pantry-tree:
-      size: 386
-      sha256: 51c4e9e8be3ee80689bb6df46aee484a4f434dbeb33f4379ed8d1741fe4631cd
+      size: 400
+      sha256: cb02eea7894a94e5dedf5cb74fd5fc6b989711ebb46a0e14d77f74f3b89dcbe0
   original:
-    hackage: servant-multipart-0.12@sha256:aa81dd0478270ade4a21b75611d5bc9cce8107df2e89c37b9964a3421629825d,2761
+    hackage: servant-multipart-client-0.12.1@sha256:d043063e2f33eab86840f87c4bdb16eb3fe4a5847a0b118e4f4265cf3ba4c9b3,1892
 snapshots:
 - completed:
-    size: 533252
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/26.yaml
-    sha256: cdbc5db9c1afe80a5998247939027a0c7db92fa0f20b5cd01596ec3da628b622
+    size: 586110
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/21.yaml
+    sha256: ce4fb8d44f3c6c6032060a02e0ebb1bd29937c9a70101c1517b92a87d9515160
   original:
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/16/26.yaml
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/lts/18/21.yaml

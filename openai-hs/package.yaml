@@ -1,5 +1,5 @@
 name:                openai-hs
-version:             0.2.0.0
+version:             0.2.1.0
 github:              "agrafix/openai-hs"
 license:             BSD3
 author:              "Alexander Thiemann <mail@thiemann.at>"
@@ -16,13 +16,13 @@ description:         Unofficial OpenAI client
 
 dependencies:
   - base >= 4.7 && < 5
+  - openai-servant >= 0.2.1  
   - aeson
   - casing
   - text
   - servant
   - servant-client
-  - servant-multipart
-  - openai-servant
+  - servant-multipart-client
   - http-client
   - bytestring
   - cpphs

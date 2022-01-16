@@ -5,7 +5,7 @@ module OpenAI.Api where
 import OpenAI.Resources
 
 import Servant.API
-import Servant.Multipart
+import Servant.Multipart.API
 
 type OpenAIAuth = BasicAuth "OpenAI API" ()
 

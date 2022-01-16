@@ -36,7 +36,7 @@ import Servant.Client
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T
-import qualified Servant.Multipart as MP
+import qualified Servant.Multipart.Client as MP
 
 -- | Your OpenAI API key. Can be obtained from the OpenAI dashboard. Format: @sk-<redacted>@
 type ApiKey = T.Text

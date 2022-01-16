@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.33.0.
+-- This file has been generated from package.yaml by hpack version 0.34.4.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 0f47df90d0a45b723d7b0b77c3679bccd709f8c989a14ca39f9c4f7abb0f4f08
+-- hash: d66854fa4f05fdb20cfe30829902f9bdd793c39e6b314aabbcb6568b637db03e
 
 name:           openai-servant
-version:        0.2.0.0
+version:        0.2.1.0
 synopsis:       Unofficial OpenAI servant types
 description:    Unofficial description of the OpenAI API using servant types
 category:       Web
@@ -35,7 +35,19 @@ library
       Paths_openai_servant
   hs-source-dirs:
       src
-  default-extensions: OverloadedStrings DataKinds TypeOperators TypeFamilies GADTs FlexibleInstances FlexibleContexts MultiParamTypeClasses StrictData ScopedTypeVariables DeriveGeneric DeriveFunctor
+  default-extensions:
+      OverloadedStrings
+      DataKinds
+      TypeOperators
+      TypeFamilies
+      GADTs
+      FlexibleInstances
+      FlexibleContexts
+      MultiParamTypeClasses
+      StrictData
+      ScopedTypeVariables
+      DeriveGeneric
+      DeriveFunctor
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
   build-depends:
       aeson
@@ -43,7 +55,7 @@ library
     , bytestring
     , casing
     , servant
-    , servant-multipart
+    , servant-multipart-api
     , text
     , time
     , vector
