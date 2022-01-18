@@ -1,61 +1,81 @@
-{-# OPTIONS_GHC -cpp -pgmPcpphs -optP--cpp #-}
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -cpp -pgmPcpphs -optP--cpp #-}
+
 module OpenAI.Client
   ( -- * Basics
-    ApiKey, OpenAIClient, makeOpenAIClient, ClientError(..)
+    ApiKey,
+    OpenAIClient,
+    makeOpenAIClient,
+    ClientError (..),
+
     -- * Helper types
-  , TimeStamp(..), OpenAIList(..)
+    TimeStamp (..),
+    OpenAIList (..),
+
     -- * Engine
-  , EngineId(..), Engine(..)
-  , listEngines
-  , getEngine
+    EngineId (..),
+    Engine (..),
+    listEngines,
+    getEngine,
+
     -- * Text completion
-  , TextCompletionId(..), TextCompletionChoice(..), TextCompletion(..), TextCompletionCreate(..)
-  , defaultTextCompletionCreate
-  , completeText
+    TextCompletionId (..),
+    TextCompletionChoice (..),
+    TextCompletion (..),
+    TextCompletionCreate (..),
+    defaultTextCompletionCreate,
+    completeText,
+
     -- * Searching
-  , SearchResult(..), SearchResultCreate(..)
-  , searchDocuments
+    SearchResult (..),
+    SearchResultCreate (..),
+    searchDocuments,
+
     -- * File API
-  , FileCreate(..), File(..), FileId(..), FileHunk(..)
-  , FileDeleteConfirmation(..)
-  , createFile, deleteFile
+    FileCreate (..),
+    File (..),
+    FileId (..),
+    FileHunk (..),
+    FileDeleteConfirmation (..),
+    createFile,
+    deleteFile,
+
     -- * Answer API
-  , getAnswer, AnswerReq(..), AnswerResp(..)
+    getAnswer,
+    AnswerReq (..),
+    AnswerResp (..),
   )
 where
 
+import qualified Data.ByteString.Lazy as BSL
+import Data.Proxy
+import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
+import Network.HTTP.Client (Manager)
 import OpenAI.Api
 import OpenAI.Client.Internal.Helpers
 import OpenAI.Resources
-
-import Data.Proxy
-import Network.HTTP.Client (Manager)
 import Servant.API
 import Servant.Client
-import qualified Data.ByteString.Lazy as BSL
-import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
 import qualified Servant.Multipart.Client as MP
 
 -- | Your OpenAI API key. Can be obtained from the OpenAI dashboard. Format: @sk-<redacted>@
 type ApiKey = T.Text
 
 -- | Holds a 'Manager' and your API key.
-data OpenAIClient
-  = OpenAIClient
-  { scBasicAuthData :: BasicAuthData
-  , scManager :: Manager
-  , scMaxRetries :: Int
+data OpenAIClient = OpenAIClient
+  { scBasicAuthData :: BasicAuthData,
+    scManager :: Manager,
+    scMaxRetries :: Int
   }
 
 -- | Construct a 'OpenAIClient'. Note that the passed 'Manager' must support https (e.g. via @http-client-tls@)
 makeOpenAIClient ::
-  ApiKey
-  -> Manager
-  -> Int
-  -- ^ Number of automatic retries the library should attempt.
-  -> OpenAIClient
+  ApiKey ->
+  Manager ->
+  -- | Number of automatic retries the library should attempt.
+  Int ->
+  OpenAIClient
 makeOpenAIClient k = OpenAIClient (BasicAuthData "" (T.encodeUtf8 k))
 
 api :: Proxy OpenAIApi
@@ -79,26 +99,28 @@ openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
     N :: OpenAIClient -> ARG -> ARG2 -> IO (Either ClientError R);\
     N sc a b = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
 
-EP2(completeText, EngineId, TextCompletionCreate, TextCompletion)
-EP2(searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
+EP2 (completeText, EngineId, TextCompletionCreate, TextCompletion)
+EP2 (searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
 
-EP0(listEngines, (OpenAIList Engine))
-EP(getEngine, EngineId, Engine)
+EP0 (listEngines, (OpenAIList Engine))
+EP (getEngine, EngineId, Engine)
 
 createFile :: OpenAIClient -> FileCreate -> IO (Either ClientError File)
 createFile sc rfc =
-  do bnd <- MP.genBoundary
-     createFileInternal sc (bnd, rfc)
+  do
+    bnd <- MP.genBoundary
+    createFileInternal sc (bnd, rfc)
 
-EP(createFileInternal, (BSL.ByteString, FileCreate), File)
-EP(deleteFile, FileId, FileDeleteConfirmation)
+EP (createFileInternal, (BSL.ByteString, FileCreate), File)
+EP (deleteFile, FileId, FileDeleteConfirmation)
 
-EP(getAnswer, AnswerReq, AnswerResp)
+EP (getAnswer, AnswerReq, AnswerResp)
 
-(listEngines'
-  :<|> getEngine'
-  :<|> completeText'
-  :<|> searchDocuments')
+( listEngines'
+    :<|> getEngine'
+    :<|> completeText'
+    :<|> searchDocuments'
+  )
   :<|> (createFileInternal' :<|> deleteFile')
-  :<|> getAnswer'
-  = client api
+  :<|> getAnswer' =
+    client api
