@@ -17,6 +17,10 @@ module OpenAI.Resources
     TextCompletionCreate (..),
     defaultTextCompletionCreate,
 
+    -- * Embeddings
+    EmbeddingCreate (..),
+    Embedding (..),
+
     -- * Searching
     SearchResult (..),
     SearchResultCreate (..),
@@ -139,6 +143,14 @@ defaultTextCompletionCreate prompt =
       tccrBestOf = Nothing
     }
 
+data EmbeddingCreate = EmbeddingCreate
+  {ecInput :: T.Text}
+  deriving (Show, Eq)
+
+data Embedding = Embedding
+  {eEmbedding :: V.Vector Double, eIndex :: Int}
+  deriving (Show, Eq)
+
 data SearchResult = SearchResult
   { srDocument :: Int,
     srScore :: Double,
@@ -222,3 +234,5 @@ $(deriveJSON (jsonOpts 1) ''File)
 $(deriveJSON (jsonOpts 3) ''FileDeleteConfirmation)
 $(deriveJSON (jsonOpts 2) ''AnswerReq)
 $(deriveJSON (jsonOpts 3) ''AnswerResp)
+$(deriveJSON (jsonOpts 2) ''EmbeddingCreate)
+$(deriveJSON (jsonOpts 1) ''Embedding)

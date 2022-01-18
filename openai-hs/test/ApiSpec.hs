@@ -71,6 +71,12 @@ apiTests =
               T.unpack (head (arsAnswers answerRes)) `shouldContain` ("California" :: String)
               _ <- forceSuccess $ deleteFile cli (fId res)
               pure ()
+      describe "embeddings" $ do
+        it "computes embeddings" $ \cli -> do
+          res <- forceSuccess $ createEmbedding cli (EngineId "ada-similarity") (EmbeddingCreate "This is nice")
+          V.null (olData res) `shouldBe` False
+          let embedding = V.head (olData res)
+          V.length (eEmbedding embedding) `shouldBe` 1024
       describe "engines" $
         do
           it "lists engines" $ \cli ->

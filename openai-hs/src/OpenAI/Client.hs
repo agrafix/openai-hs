@@ -26,6 +26,11 @@ module OpenAI.Client
     defaultTextCompletionCreate,
     completeText,
 
+    -- * Embeddings
+    EmbeddingCreate (..),
+    Embedding (..),
+    createEmbedding,
+
     -- * Searching
     SearchResult (..),
     SearchResultCreate (..),
@@ -101,6 +106,7 @@ openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
 
 EP2 (completeText, EngineId, TextCompletionCreate, TextCompletion)
 EP2 (searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
+EP2 (createEmbedding, EngineId, EmbeddingCreate, (OpenAIList Embedding))
 
 EP0 (listEngines, (OpenAIList Engine))
 EP (getEngine, EngineId, Engine)
@@ -120,6 +126,7 @@ EP (getAnswer, AnswerReq, AnswerResp)
     :<|> getEngine'
     :<|> completeText'
     :<|> searchDocuments'
+    :<|> createEmbedding'
   )
   :<|> (createFileInternal' :<|> deleteFile')
   :<|> getAnswer' =
