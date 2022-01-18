@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d66854fa4f05fdb20cfe30829902f9bdd793c39e6b314aabbcb6568b637db03e
+-- hash: fa6a579e19b730c3c7362a8966f384ff312aaceb6cf8cdceff036ed2ec48f90b
 
 name:           openai-servant
-version:        0.2.1.0
+version:        0.2.2.0
 synopsis:       Unofficial OpenAI servant types
 description:    Unofficial description of the OpenAI API using servant types
 category:       Web
@@ -15,7 +15,7 @@ homepage:       https://github.com/agrafix/openai-hs#readme
 bug-reports:    https://github.com/agrafix/openai-hs/issues
 author:         Alexander Thiemann <mail@thiemann.at>
 maintainer:     Alexander Thiemann <mail@thiemann.at>
-copyright:      2021 Alexander Thiemann <mail@thiemann.at>
+copyright:      2021-2022 Alexander Thiemann <mail@thiemann.at>
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple

@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 1dde99a185b23e2392f6b88ffc6c086ea7240054bcf59d9848a2bd6f36ecfabc
+-- hash: 8760d75e39a4a6db941c2503a8e8519a3c82b52bad91dcf39594cdd9258c7f4b
 
 name:           openai-hs
-version:        0.2.1.0
+version:        0.2.2.0
 synopsis:       Unofficial OpenAI client
 description:    Unofficial OpenAI client
 category:       Web
@@ -15,7 +15,7 @@ homepage:       https://github.com/agrafix/openai-hs#readme
 bug-reports:    https://github.com/agrafix/openai-hs/issues
 author:         Alexander Thiemann <mail@thiemann.at>
 maintainer:     Alexander Thiemann <mail@thiemann.at>
-copyright:      2021 Alexander Thiemann <mail@thiemann.at>
+copyright:      2021-2022 Alexander Thiemann <mail@thiemann.at>
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
