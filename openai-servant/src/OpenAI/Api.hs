@@ -14,6 +14,7 @@ type OpenAIApiInternal =
   "engines" :> EnginesApi
     :<|> "files" :> FilesApi
     :<|> AnswerApi
+    :<|> FineTuneApi
 
 type FilesApi =
   OpenAIAuth :> MultipartForm Mem FileCreate :> Post '[JSON] File
@@ -21,6 +22,13 @@ type FilesApi =
 
 type AnswerApi =
   "answers" :> OpenAIAuth :> ReqBody '[JSON] AnswerReq :> Post '[JSON] AnswerResp
+
+type FineTuneApi =
+  OpenAIAuth :> "fine-tunes" :> ReqBody '[JSON] FineTuneCreate :> Post '[JSON] FineTune
+    :<|> OpenAIAuth :> "fine-tunes" :> Get '[JSON] (OpenAIList FineTune)
+    :<|> OpenAIAuth :> "fine-tunes" :> Capture "fine_tune_id" FineTuneId :> Get '[JSON] FineTune
+    :<|> OpenAIAuth :> "fine-tunes" :> Capture "fine_tune_id" FineTuneId :> "cancel" :> Post '[JSON] FineTune
+    :<|> OpenAIAuth :> "fine-tunes" :> Capture "fine_tune_id" FineTuneId :> "events" :> Get '[JSON] (OpenAIList FineTuneEvent)
 
 type EnginesApi =
   OpenAIAuth :> Get '[JSON] (OpenAIList Engine)

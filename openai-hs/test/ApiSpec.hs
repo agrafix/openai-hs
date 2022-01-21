@@ -37,10 +37,9 @@ apiTests =
               let file =
                     FileCreate
                       { fcPurpose = "search",
-                        fcDocuments = [FileHunk "Test 1" Nothing, FileHunk "text 2" (Just "foo")]
+                        fcDocuments = [FhSearch $ SearchHunk "Test 1" Nothing, FhSearch $ SearchHunk "text 2" (Just "foo")]
                       }
-              res <- forceSuccess $ createFile cli file
-              _ <- forceSuccess $ deleteFile cli (fId res)
+              _ <- forceSuccess $ createFile cli file
               pure ()
       describe "answer api" $
         do
@@ -50,9 +49,9 @@ apiTests =
                     FileCreate
                       { fcPurpose = "search",
                         fcDocuments =
-                          [ FileHunk "Cities in California: San Francisco, Los Angeles" (Just "cali"),
-                            FileHunk "Tasty fruit: Apple, Orange" (Just "fruit"),
-                            FileHunk "Cities in Germany: Freiburg, Berlin" (Just "germany")
+                          [ FhSearch $ SearchHunk "Cities in California: San Francisco, Los Angeles" (Just "cali"),
+                            FhSearch $ SearchHunk "Tasty fruit: Apple, Orange" (Just "fruit"),
+                            FhSearch $ SearchHunk "Cities in Germany: Freiburg, Berlin" (Just "germany")
                           ]
                       }
               res <- forceSuccess $ createFile cli file
@@ -69,7 +68,6 @@ apiTests =
                       }
               answerRes <- forceSuccess $ getAnswer cli searchReq
               T.unpack (head (arsAnswers answerRes)) `shouldContain` ("California" :: String)
-              _ <- forceSuccess $ deleteFile cli (fId res)
               pure ()
       describe "embeddings" $ do
         it "computes embeddings" $ \cli -> do
@@ -77,6 +75,20 @@ apiTests =
           V.null (olData res) `shouldBe` False
           let embedding = V.head (olData res)
           V.length (eEmbedding embedding) `shouldBe` 1024
+      describe "fine tuning" $ do
+        it "allows creating fine-tuning" $ \cli -> do
+          let file =
+                FileCreate
+                  { fcPurpose = "fine-tune",
+                    fcDocuments =
+                      [ FhFineTune $ FineTuneHunk "So sad. Label:" "sad",
+                        FhFineTune $ FineTuneHunk "So happy. Label:" "happy"
+                      ]
+                  }
+          createRes <- forceSuccess $ createFile cli file
+          let ftc = defaultFineTuneCreate (fId createRes)
+          res <- forceSuccess $ createFineTune cli ftc
+          ftStatus res `shouldBe` "pending"
       describe "engines" $
         do
           it "lists engines" $ \cli ->
@@ -125,9 +137,9 @@ apiTests =
                     FileCreate
                       { fcPurpose = "search",
                         fcDocuments =
-                          [ FileHunk "pool" (Just "pool"),
-                            FileHunk "gym" (Just "gym"),
-                            FileHunk "night club" (Just "nc")
+                          [ FhSearch $ SearchHunk "pool" (Just "pool"),
+                            FhSearch $ SearchHunk "gym" (Just "gym"),
+                            FhSearch $ SearchHunk "night club" (Just "nc")
                           ]
                       }
               createRes <- forceSuccess $ createFile cli file
@@ -142,5 +154,4 @@ apiTests =
               let res = V.head (olData searchRes)
               srDocument res `shouldBe` 0 -- pool
               srMetadata res `shouldBe` Just "pool"
-              _ <- forceSuccess $ deleteFile cli (fId createRes)
               pure ()

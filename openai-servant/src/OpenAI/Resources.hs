@@ -21,6 +21,13 @@ module OpenAI.Resources
     EmbeddingCreate (..),
     Embedding (..),
 
+    -- * Fine tuning
+    FineTuneId (..),
+    FineTuneCreate (..),
+    defaultFineTuneCreate,
+    FineTune (..),
+    FineTuneEvent (..),
+
     -- * Searching
     SearchResult (..),
     SearchResultCreate (..),
@@ -30,6 +37,9 @@ module OpenAI.Resources
     FileId (..),
     File (..),
     FileHunk (..),
+    SearchHunk (..),
+    ClassificationHunk (..),
+    FineTuneHunk (..),
     FileDeleteConfirmation (..),
 
     -- * Answers API
@@ -151,6 +161,55 @@ data Embedding = Embedding
   {eEmbedding :: V.Vector Double, eIndex :: Int}
   deriving (Show, Eq)
 
+newtype FineTuneId = FineTuneId {unFineTuneId :: T.Text}
+  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+
+data FineTuneCreate = FineTuneCreate
+  { ftcTrainingFile :: FileId,
+    ftcValidationFile :: Maybe FileId,
+    ftcModel :: Maybe T.Text,
+    ftcBatchSize :: Maybe Int,
+    ftcNEpochs :: Maybe T.Text,
+    ftcLearningRateMultiplier :: Maybe Double,
+    ftcPromptLossWeight :: Maybe Double,
+    ftcComputeClassificationMetrics :: Maybe Bool,
+    ftcClassificationNClasses :: Maybe Int,
+    ftcClassificationPositiveClass :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+defaultFineTuneCreate :: FileId -> FineTuneCreate
+defaultFineTuneCreate file =
+  FineTuneCreate
+    { ftcTrainingFile = file,
+      ftcValidationFile = Nothing,
+      ftcModel = Nothing,
+      ftcBatchSize = Nothing,
+      ftcNEpochs = Nothing,
+      ftcLearningRateMultiplier = Nothing,
+      ftcPromptLossWeight = Nothing,
+      ftcComputeClassificationMetrics = Nothing,
+      ftcClassificationNClasses = Nothing,
+      ftcClassificationPositiveClass = Nothing
+    }
+
+data FineTuneEvent = FineTuneEvent
+  { fteCreatedAt :: Int,
+    fteLevel :: T.Text,
+    fteMessage :: T.Text
+  }
+  deriving (Show, Eq)
+
+data FineTune = FineTune
+  { ftId :: FineTuneId,
+    ftModel :: T.Text,
+    ftCreatedAt :: Int,
+    ftEvents :: V.Vector FineTuneEvent,
+    ftTunedModel :: Maybe T.Text,
+    ftStatus :: T.Text
+  }
+  deriving (Show, Eq)
+
 data SearchResult = SearchResult
   { srDocument :: Int,
     srScore :: Double,
@@ -166,10 +225,28 @@ data SearchResultCreate = SearchResultCreate
   }
   deriving (Show, Eq)
 
-data FileHunk = FileHunk
-  { fhContent :: T.Text,
-    fhMetadata :: Maybe T.Text
+data SearchHunk = SearchHunk
+  { shText :: T.Text,
+    shMetadata :: Maybe T.Text
   }
+  deriving (Show, Eq)
+
+data ClassificationHunk = ClassificationHunk
+  { chText :: T.Text,
+    chLabel :: T.Text
+  }
+  deriving (Show, Eq)
+
+data FineTuneHunk = FineTuneHunk
+  { fthPrompt :: T.Text,
+    fthCompletion :: T.Text
+  }
+  deriving (Show, Eq)
+
+data FileHunk
+  = FhSearch SearchHunk
+  | FhClassifications ClassificationHunk
+  | FhFineTune FineTuneHunk
   deriving (Show, Eq)
 
 data FileCreate = FileCreate
@@ -181,7 +258,14 @@ data FileCreate = FileCreate
 packDocuments :: [FileHunk] -> BSL.ByteString
 packDocuments docs =
   BSL.intercalate "\n" $
-    map (\t -> A.encode $ A.object ["text" A..= fhContent t, "metadata" A..= fhMetadata t]) docs
+    map
+      ( \t -> A.encode $
+          case t of
+            FhSearch x -> A.toJSON x
+            FhClassifications x -> A.toJSON x
+            FhFineTune x -> A.toJSON x
+      )
+      docs
 
 instance ToMultipart Mem FileCreate where
   toMultipart rfc =
@@ -236,3 +320,9 @@ $(deriveJSON (jsonOpts 2) ''AnswerReq)
 $(deriveJSON (jsonOpts 3) ''AnswerResp)
 $(deriveJSON (jsonOpts 2) ''EmbeddingCreate)
 $(deriveJSON (jsonOpts 1) ''Embedding)
+$(deriveJSON (jsonOpts 3) ''FineTuneCreate)
+$(deriveJSON (jsonOpts 3) ''FineTuneEvent)
+$(deriveJSON (jsonOpts 2) ''FineTune)
+$(deriveJSON (jsonOpts 2) ''SearchHunk)
+$(deriveJSON (jsonOpts 2) ''ClassificationHunk)
+$(deriveJSON (jsonOpts 3) ''FineTuneHunk)

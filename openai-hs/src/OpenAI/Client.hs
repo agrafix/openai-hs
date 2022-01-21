@@ -31,6 +31,18 @@ module OpenAI.Client
     Embedding (..),
     createEmbedding,
 
+    -- * Fine tunes
+    FineTuneId (..),
+    FineTuneCreate (..),
+    defaultFineTuneCreate,
+    FineTune (..),
+    FineTuneEvent (..),
+    createFineTune,
+    listFineTunes,
+    getFineTune,
+    cancelFineTune,
+    listFineTuneEvents,
+
     -- * Searching
     SearchResult (..),
     SearchResultCreate (..),
@@ -41,6 +53,9 @@ module OpenAI.Client
     File (..),
     FileId (..),
     FileHunk (..),
+    SearchHunk (..),
+    ClassificationHunk (..),
+    FineTuneHunk (..),
     FileDeleteConfirmation (..),
     createFile,
     deleteFile,
@@ -108,6 +123,12 @@ EP2 (completeText, EngineId, TextCompletionCreate, TextCompletion)
 EP2 (searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
 EP2 (createEmbedding, EngineId, EmbeddingCreate, (OpenAIList Embedding))
 
+EP (createFineTune, FineTuneCreate, FineTune)
+EP0 (listFineTunes, (OpenAIList FineTune))
+EP (getFineTune, FineTuneId, FineTune)
+EP (cancelFineTune, FineTuneId, FineTune)
+EP (listFineTuneEvents, FineTuneId, (OpenAIList FineTuneEvent))
+
 EP0 (listEngines, (OpenAIList Engine))
 EP (getEngine, EngineId, Engine)
 
@@ -129,5 +150,11 @@ EP (getAnswer, AnswerReq, AnswerResp)
     :<|> createEmbedding'
   )
   :<|> (createFileInternal' :<|> deleteFile')
-  :<|> getAnswer' =
+  :<|> getAnswer'
+  :<|> ( createFineTune'
+           :<|> listFineTunes'
+           :<|> getFineTune'
+           :<|> cancelFineTune'
+           :<|> listFineTuneEvents'
+         ) =
     client api
