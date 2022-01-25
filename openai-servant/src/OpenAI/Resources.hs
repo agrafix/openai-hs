@@ -281,6 +281,7 @@ newtype FileId = FileId {unFileId :: T.Text}
 data File = File
   { fId :: FileId,
     fCreatedAt :: TimeStamp,
+    fStatus :: T.Text,
     fPurpose :: T.Text
   }
   deriving (Show, Eq)
