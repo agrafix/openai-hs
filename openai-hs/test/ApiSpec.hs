@@ -71,10 +71,10 @@ apiTests =
               pure ()
       describe "embeddings" $ do
         it "computes embeddings" $ \cli -> do
-          res <- forceSuccess $ createEmbedding cli (EngineId "ada-similarity") (EmbeddingCreate "This is nice")
+          res <- forceSuccess $ createEmbedding cli (EngineId "babbage-similarity") (EmbeddingCreate "This is nice")
           V.null (olData res) `shouldBe` False
           let embedding = V.head (olData res)
-          V.length (eEmbedding embedding) `shouldBe` 1024
+          V.length (eEmbedding embedding) `shouldBe` 2048
       describe "fine tuning" $ do
         it "allows creating fine-tuning" $ \cli -> do
           let file =
