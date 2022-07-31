@@ -255,26 +255,6 @@ data FileCreate = FileCreate
   }
   deriving (Show, Eq)
 
-packDocuments :: [FileHunk] -> BSL.ByteString
-packDocuments docs =
-  BSL.intercalate "\n" $
-    map
-      ( \t -> A.encode $
-          case t of
-            FhSearch x -> A.toJSON x
-            FhClassifications x -> A.toJSON x
-            FhFineTune x -> A.toJSON x
-      )
-      docs
-
-instance ToMultipart Mem FileCreate where
-  toMultipart rfc =
-    MultipartData
-      [ Input "purpose" (fcPurpose rfc)
-      ]
-      [ FileData "file" "data.jsonl" "application/json" (packDocuments $ fcDocuments rfc)
-      ]
-
 newtype FileId = FileId {unFileId :: T.Text}
   deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
 
@@ -310,8 +290,8 @@ data AnswerResp = AnswerResp
 
 $(deriveJSON (jsonOpts 2) ''OpenAIList)
 $(deriveJSON (jsonOpts 1) ''Engine)
-$(deriveJSON (jsonOpts 2) ''TextCompletion)
 $(deriveJSON (jsonOpts 3) ''TextCompletionChoice)
+$(deriveJSON (jsonOpts 2) ''TextCompletion)
 $(deriveJSON (jsonOpts 4) ''TextCompletionCreate)
 $(deriveJSON (jsonOpts 2) ''SearchResult)
 $(deriveJSON (jsonOpts 4) ''SearchResultCreate)
@@ -327,3 +307,23 @@ $(deriveJSON (jsonOpts 2) ''FineTune)
 $(deriveJSON (jsonOpts 2) ''SearchHunk)
 $(deriveJSON (jsonOpts 2) ''ClassificationHunk)
 $(deriveJSON (jsonOpts 3) ''FineTuneHunk)
+
+packDocuments :: [FileHunk] -> BSL.ByteString
+packDocuments docs =
+  BSL.intercalate "\n" $
+    map
+      ( \t -> A.encode $
+          case t of
+            FhSearch x -> A.toJSON x
+            FhClassifications x -> A.toJSON x
+            FhFineTune x -> A.toJSON x
+      )
+      docs
+
+instance ToMultipart Mem FileCreate where
+  toMultipart rfc =
+    MultipartData
+      [ Input "purpose" (fcPurpose rfc)
+      ]
+      [ FileData "file" "data.jsonl" "application/json" (packDocuments $ fcDocuments rfc)
+      ]
