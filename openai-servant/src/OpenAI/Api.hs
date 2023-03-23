@@ -11,11 +11,43 @@ type OpenAIApi =
   "v1" :> OpenAIApiInternal
 
 type OpenAIApiInternal =
-  "engines" :> EnginesApi
+         "models" :> ModelsApi
+    :<|> "completions" :> CompletionsApi
+    :<|> "chat" :> ChatApi
+    :<|> "edits" :> EditsApi
+    :<|> "images" :> ImagesApi
+    :<|> "embeddings" :> EmbeddingsApi
+    :<|> "audio" :> AudioApi
     :<|> "files" :> FilesApi
     :<|> AnswerApi
     :<|> FineTuneApi
+    :<|>  "engines" :> EnginesApi
 
+type ModelsApi = 
+         OpenAIAuth :> Get '[JSON] (OpenAIList Model)
+    :<|> OpenAIAuth :> Capture "model_id" ModelId :> Get '[JSON] Model
+
+type CompletionsApi =
+  OpenAIAuth :> ReqBody '[JSON] CompletionCreate :> Post '[JSON] CompletionResponse
+
+type ChatApi =
+  OpenAIAuth :> "completions" :> ReqBody '[JSON] ChatCompletionRequest :> Post '[JSON] ChatResponse
+
+type EditsApi =
+  OpenAIAuth :> ReqBody '[JSON] EditCreate :> Post '[JSON] EditResponse
+
+type ImagesApi =
+       OpenAIAuth :> "generations" :> ReqBody '[JSON] ImageCreate :> Post '[JSON] ImageResponse
+  :<|> OpenAIAuth :> "edits" :> ReqBody '[JSON] ImageEditRequest :> Post '[JSON] ImageResponse
+  :<|> OpenAIAuth :> "variations" :> ReqBody '[JSON] ImageVariationRequest :> Post '[JSON] ImageResponse
+
+type EmbeddingsApi =
+  OpenAIAuth :> ReqBody '[JSON] EmbeddingCreate :> Post '[JSON] EmbeddingResponse
+
+type AudioApi =
+       OpenAIAuth :> "transcriptions" :> ReqBody '[JSON] AudioTranscriptionRequest :> Post '[JSON] AudioResponseData
+  :<|> OpenAIAuth :> "translations" :> ReqBody '[JSON] AudioTranslationRequest :> Post '[JSON] AudioResponseData
+  
 type FilesApi =
   OpenAIAuth :> MultipartForm Mem FileCreate :> Post '[JSON] File
     :<|> OpenAIAuth :> Capture "file_id" FileId :> Delete '[JSON] FileDeleteConfirmation
@@ -35,4 +67,4 @@ type EnginesApi =
     :<|> OpenAIAuth :> Capture "engine_id" EngineId :> Get '[JSON] Engine
     :<|> OpenAIAuth :> Capture "engine_id" EngineId :> "completions" :> ReqBody '[JSON] TextCompletionCreate :> Post '[JSON] TextCompletion
     :<|> OpenAIAuth :> Capture "engine_id" EngineId :> "search" :> ReqBody '[JSON] SearchResultCreate :> Post '[JSON] (OpenAIList SearchResult)
-    :<|> OpenAIAuth :> Capture "engine_id" EngineId :> "embeddings" :> ReqBody '[JSON] EmbeddingCreate :> Post '[JSON] (OpenAIList Embedding)
+    :<|> OpenAIAuth :> Capture "engine_id" EngineId :> "embeddings" :> ReqBody '[JSON] EngineEmbeddingCreate :> Post '[JSON] (OpenAIList EngineEmbedding)

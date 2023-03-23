@@ -23,15 +23,76 @@ forceSuccess req =
       Right ok -> pure ok
 
 apiSpec :: Spec
-apiSpec =
-  describe "core api" apiTests
+apiSpec = do
+  describe "2022 core api" apiTests2022
+  describe "March 2023 core API" apiTests2023
 
-apiTests :: SpecWith ()
-apiTests =
+
+---------------------------------
+------- 2023 API tests ----------
+---------------------------------
+
+apiTests2023 :: SpecWith ()
+apiTests2023 =
+  beforeAll makeClient $ do
+    describe "models api" $ do
+      it "list models" $ \cli -> do
+        res <- forceSuccess $ listModels cli
+        (V.length (olData res) > 5) `shouldBe` True
+        let model = V.head (olData res)
+        mOwnedBy model `shouldBe` "openai"
+
+      it "retrieve model" $ \cli -> do
+        model <- forceSuccess $ getModel cli (ModelId "text-davinci-003")
+        mOwnedBy model `shouldBe` "openai-internal"
+
+    describe "completions api" $ do
+      it "create completion" $ \cli -> do
+        let completion = (defaultCompletionCreate (ModelId "text-ada-001") "The opposite of up is")
+                           {ccrMaxTokens = Just 1, ccrTemperature = Just 0.1, ccrN = Just 1}
+        res <- forceSuccess $ completeText cli completion
+        crChoices res `shouldNotBe` []
+        cchText (head (crChoices res)) `shouldBe` " down"
+
+    describe "chat api" $ do
+      it "create chat completion" $ \cli -> do
+        let completion = defaultChatCompletionRequest (ModelId "gpt-3.5-turbo")
+                                                      [ChatMessage {chmRole="user",
+                                                                    chmContent="What is the opposite of up? Answer in one word."
+                                                                    }]
+        res <- forceSuccess $ completeChat cli completion
+        chrChoices res `shouldNotBe` []
+        chmContent (chchMessage (head (chrChoices res))) `shouldBe` "Down."
+
+    describe "edits api" $ do
+      it "create edit" $ \cli -> do
+        let edit = (defaultEditCreate (ModelId "text-davinci-edit-001") "Fox" "Pluralize the word")
+                     {edcrN = Just 1}
+        res <- forceSuccess $ createTextEdit cli edit
+        edrChoices res `shouldNotBe` []
+        edchText (head $ edrChoices res) `shouldBe` "Foxes\n"
+
+    -- TODO (2023.03.22): Create tests for images, audio APIs
+
+    describe "embeddings api" $ do
+      it "create embeddings" $ \cli -> do
+        let embedding = EmbeddingCreate {embcModel=ModelId "text-embedding-ada-002", embcInput="Hello",embcUser=Nothing}
+        res <- forceSuccess $ createEmbedding cli embedding
+        embrData res `shouldNotBe` []
+        V.length (embdEmbedding (head $ embrData res)) `shouldBe` 1536
+
+
+---------------------------------
+------- 2022 API tests ----------
+---------------------------------
+
+apiTests2022 :: SpecWith ()
+apiTests2022 =
   beforeAll makeClient $
     do
       describe "file api" $
         do
+          -- TODO 2023.03.22: This test is broken on old commit. Did not investigate
           it "allows creating one" $ \cli ->
             do
               let file =
@@ -43,6 +104,7 @@ apiTests =
               pure ()
       describe "answer api" $
         do
+          -- TODO 2023.03.22: This test is broken on old commit. Did not investigate
           it "works" $ \cli ->
             do
               let file =
@@ -71,10 +133,10 @@ apiTests =
               pure ()
       describe "embeddings" $ do
         it "computes embeddings" $ \cli -> do
-          res <- forceSuccess $ createEmbedding cli (EngineId "babbage-similarity") (EmbeddingCreate "This is nice")
+          res <- forceSuccess $ engineCreateEmbedding cli (EngineId "babbage-similarity") (EngineEmbeddingCreate "This is nice")
           V.null (olData res) `shouldBe` False
           let embedding = V.head (olData res)
-          V.length (eEmbedding embedding) `shouldBe` 2048
+          V.length (eneEngineEmbedding embedding) `shouldBe` 2048
       describe "fine tuning" $ do
         it "allows creating fine-tuning" $ \cli -> do
           let file =
@@ -108,14 +170,15 @@ apiTests =
               firstEngine <- V.head . olData <$> forceSuccess (listEngines cli)
               completionResults <-
                 forceSuccess $
-                  completeText cli (eId firstEngine) $
-                    (defaultTextCompletionCreate "Why is the house ")
+                  engineCompleteText cli (eId firstEngine) $
+                    (defaultEngineTextCompletionCreate "Why is the house ")
                       { tccrMaxTokens = Just 2
                       }
               V.length (tcChoices completionResults) `shouldBe` 1
               T.length (tccText (V.head (tcChoices completionResults))) `shouldNotBe` 0
       describe "document search" $
         do
+          -- TODO 2023.03.22: This test is broken on old commit. Did not investigate
           it "works (smoke test)" $ \cli ->
             do
               firstEngine <- V.head . olData <$> forceSuccess (listEngines cli)
@@ -131,6 +194,7 @@ apiTests =
               V.length (olData searchResults) `shouldBe` 3
       describe "file based document search" $
         do
+          -- TODO 2023.03.22: This test is broken on old commit. Did not investigate
           it "works" $ \cli ->
             do
               let file =
