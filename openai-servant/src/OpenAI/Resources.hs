@@ -1,6 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module OpenAI.Resources
   ( -- * Core Types
@@ -56,6 +57,7 @@ import Data.String (IsString(..))
 import Data.Time
 import Data.Time.Clock.POSIX
 import qualified Data.Vector as V
+import GHC.Exts (IsList)
 import OpenAI.Internal.Aeson
 import Servant.API
 import Servant.Multipart.API
@@ -83,6 +85,7 @@ newtype OpenAIList a = OpenAIList
   { olData :: V.Vector a
   }
   deriving stock (Show, Eq, Functor)
+  deriving newtype (IsList)
 
 instance Semigroup (OpenAIList a) where
   (<>) a b = OpenAIList (olData a <> olData b)
@@ -291,10 +294,11 @@ data AnswerReq = AnswerReq
   }
   deriving stock (Show, Eq)
 
-data AnswerResp = AnswerResp
+newtype AnswerResp = AnswerResp
   { arsAnswers :: [T.Text]
   }
   deriving stock (Show, Eq)
+  deriving newtype (IsList)
 
 $(deriveJSON (jsonOpts 2) ''OpenAIList)
 $(deriveJSON (jsonOpts 1) ''Engine)
