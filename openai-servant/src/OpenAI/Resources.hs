@@ -85,17 +85,7 @@ newtype OpenAIList a = OpenAIList
   { olData :: V.Vector a
   }
   deriving stock (Show, Eq, Functor)
-  deriving newtype (IsList)
-
-instance Semigroup (OpenAIList a) where
-  (<>) a b = OpenAIList (olData a <> olData b)
-
-instance Monoid (OpenAIList a) where
-  mempty = OpenAIList mempty
-
-instance Applicative OpenAIList where
-  pure = OpenAIList . pure
-  (<*>) go x = OpenAIList (olData go <*> olData x)
+  deriving newtype (Applicative, IsList, Monoid, Semigroup)
 
 newtype EngineId = EngineId {unEngineId :: T.Text}
   deriving stock (Eq, Show)
