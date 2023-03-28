@@ -52,6 +52,7 @@ where
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
 import qualified Data.Text as T
+import Data.String (IsString(..))
 import Data.Time
 import Data.Time.Clock.POSIX
 import qualified Data.Vector as V
@@ -95,7 +96,7 @@ instance Applicative OpenAIList where
 
 newtype EngineId = EngineId {unEngineId :: T.Text}
   deriving stock (Eq, Show)
-  deriving newtype (ToJSON, FromJSON, ToHttpApiData)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
 
 data Engine = Engine
   { eId :: EngineId,
@@ -106,7 +107,7 @@ data Engine = Engine
 
 newtype TextCompletionId = TextCompletionId {unTextCompletionId :: T.Text}
   deriving stock (Show, Eq)
-  deriving newtype (ToJSON, FromJSON, ToHttpApiData)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
 
 data TextCompletionChoice = TextCompletionChoice
   { tccText :: T.Text,
@@ -156,9 +157,10 @@ defaultTextCompletionCreate prompt =
       tccrBestOf = Nothing
     }
 
-data EmbeddingCreate = EmbeddingCreate
+newtype EmbeddingCreate = EmbeddingCreate
   {ecInput :: T.Text}
   deriving stock (Show, Eq)
+  deriving newtype (IsString)
 
 data Embedding = Embedding
   {eEmbedding :: V.Vector Double, eIndex :: Int}
@@ -166,7 +168,7 @@ data Embedding = Embedding
 
 newtype FineTuneId = FineTuneId {unFineTuneId :: T.Text}
   deriving stock (Show, Eq)
-  deriving newtype (ToJSON, FromJSON, ToHttpApiData)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
 
 data FineTuneCreate = FineTuneCreate
   { ftcTrainingFile :: FileId,
@@ -261,7 +263,7 @@ data FileCreate = FileCreate
 
 newtype FileId = FileId {unFileId :: T.Text}
   deriving stock (Show, Eq)
-  deriving newtype (ToJSON, FromJSON, ToHttpApiData)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
 
 data File = File
   { fId :: FileId,
@@ -271,10 +273,11 @@ data File = File
   }
   deriving stock (Show, Eq)
 
-data FileDeleteConfirmation = FileDeleteConfirmation
+newtype FileDeleteConfirmation = FileDeleteConfirmation
   { fdcId :: FileId
   }
   deriving stock (Show, Eq)
+  deriving newtype (IsString)
 
 data AnswerReq = AnswerReq
   { arFile :: Maybe FileId,
