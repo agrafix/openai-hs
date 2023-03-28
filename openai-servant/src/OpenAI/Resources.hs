@@ -84,12 +84,12 @@ instance ToHttpApiData TimeStamp where
 newtype OpenAIList a = OpenAIList
   { olData :: V.Vector a
   }
-  deriving stock (Show, Eq, Functor)
-  deriving newtype (Applicative, IsList, Monoid, Semigroup)
+  deriving stock (Eq, Functor)
+  deriving newtype (Applicative, IsList, Monoid, Semigroup, Show)
 
 newtype EngineId = EngineId {unEngineId :: T.Text}
-  deriving stock (Eq, Show)
-  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data Engine = Engine
   { eId :: EngineId,
@@ -99,8 +99,8 @@ data Engine = Engine
   deriving stock (Show, Eq)
 
 newtype TextCompletionId = TextCompletionId {unTextCompletionId :: T.Text}
-  deriving stock (Show, Eq)
-  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data TextCompletionChoice = TextCompletionChoice
   { tccText :: T.Text,
@@ -152,16 +152,16 @@ defaultTextCompletionCreate prompt =
 
 newtype EmbeddingCreate = EmbeddingCreate
   {ecInput :: T.Text}
-  deriving stock (Show, Eq)
-  deriving newtype (IsString)
+  deriving stock (Eq)
+  deriving newtype (IsString, Show)
 
 data Embedding = Embedding
   {eEmbedding :: V.Vector Double, eIndex :: Int}
   deriving stock (Show, Eq)
 
 newtype FineTuneId = FineTuneId {unFineTuneId :: T.Text}
-  deriving stock (Show, Eq)
-  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data FineTuneCreate = FineTuneCreate
   { ftcTrainingFile :: FileId,
@@ -255,8 +255,8 @@ data FileCreate = FileCreate
   deriving stock (Show, Eq)
 
 newtype FileId = FileId {unFileId :: T.Text}
-  deriving stock (Show, Eq)
-  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data File = File
   { fId :: FileId,
@@ -269,8 +269,8 @@ data File = File
 newtype FileDeleteConfirmation = FileDeleteConfirmation
   { fdcId :: FileId
   }
-  deriving stock (Show, Eq)
-  deriving newtype (IsString)
+  deriving stock (Eq)
+  deriving newtype (IsString, Show)
 
 data AnswerReq = AnswerReq
   { arFile :: Maybe FileId,
@@ -287,8 +287,8 @@ data AnswerReq = AnswerReq
 newtype AnswerResp = AnswerResp
   { arsAnswers :: [T.Text]
   }
-  deriving stock (Show, Eq)
-  deriving newtype (IsList)
+  deriving stock (Eq)
+  deriving newtype (IsList, Show)
 
 $(deriveJSON (jsonOpts 2) ''OpenAIList)
 $(deriveJSON (jsonOpts 1) ''Engine)
