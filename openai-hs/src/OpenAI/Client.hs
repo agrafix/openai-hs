@@ -11,27 +11,81 @@ module OpenAI.Client
     -- * Helper types
     TimeStamp (..),
     OpenAIList (..),
+    Usage (..),
 
-    -- * Engine
+
+    -- * Models
+    Model(..),
+    ModelId(..),
+    listModels,
+    getModel,
+
+    -- * Completion
+    CompletionCreate (..),
+    CompletionChoice (..),
+    CompletionResponse (..),
+    defaultCompletionCreate,
+    completeText,    
+
+    -- * Chat
+    ChatMessage (..),
+    ChatCompletionRequest (..),
+    ChatChoice (..),
+    ChatResponse (..),
+    defaultChatCompletionRequest,
+    completeChat,
+
+    -- * Edits
+    EditCreate (..),
+    EditChoice (..),
+    EditResponse (..),
+    createTextEdit,
+    defaultEditCreate,
+
+    -- * Images
+    ImageResponse (..),
+    ImageResponseData (..),
+    ImageCreate (..),
+    ImageEditRequest (..),
+    ImageVariationRequest (..),
+    generateImage,
+    createImageEdit,
+    createImageVariation,
+
+    -- * Embeddings
+    EmbeddingCreate (..),
+    EmbeddingResponseData (..),
+    EmbeddingUsage (..),
+    EmbeddingResponse (..),
+    createEmbedding,
+
+    -- * Audio
+    AudioResponseData (..),
+    AudioTranscriptionRequest (..),
+    AudioTranslationRequest (..),
+    createTranscription,
+    createAudioTranslation,
+
+    -- * Engine (deprecated)
     EngineId (..),
     Engine (..),
     listEngines,
     getEngine,
 
-    -- * Text completion
+    -- * Engine-based text completion (deprecated)
     TextCompletionId (..),
     TextCompletionChoice (..),
     TextCompletion (..),
     TextCompletionCreate (..),
-    defaultTextCompletionCreate,
-    completeText,
+    defaultEngineTextCompletionCreate,
+    engineCompleteText,
 
-    -- * Embeddings
-    EmbeddingCreate (..),
-    Embedding (..),
-    createEmbedding,
+    -- * Engine-based embeddings (deprecated)
+    EngineEmbeddingCreate (..),
+    EngineEmbedding (..),
+    engineCreateEmbedding,
 
-    -- * Fine tunes
+    -- * Fine tunes (out of date)
     FineTuneId (..),
     FineTuneCreate (..),
     defaultFineTuneCreate,
@@ -43,12 +97,12 @@ module OpenAI.Client
     cancelFineTune,
     listFineTuneEvents,
 
-    -- * Searching
+    -- * Searching (out of date)
     SearchResult (..),
     SearchResultCreate (..),
     searchDocuments,
 
-    -- * File API
+    -- * File API (out of date)
     FileCreate (..),
     File (..),
     FileId (..),
@@ -60,7 +114,7 @@ module OpenAI.Client
     createFile,
     deleteFile,
 
-    -- * Answer API
+    -- * Answer API (out of date)
     getAnswer,
     AnswerReq (..),
     AnswerResp (..),
@@ -109,7 +163,7 @@ openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
     N :: OpenAIClient -> IO (Either ClientError R);\
     N sc = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc)) (mkClientEnv (scManager sc) openaiBaseUrl)
 
-#define EP(N, ARG, R) \
+#define EP1(N, ARG, R) \
     N##' :: BasicAuthData -> ARG -> ClientM R;\
     N :: OpenAIClient -> ARG -> IO (Either ClientError R);\
     N sc a = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a) (mkClientEnv (scManager sc) openaiBaseUrl)
@@ -119,18 +173,24 @@ openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
     N :: OpenAIClient -> ARG -> ARG2 -> IO (Either ClientError R);\
     N sc a b = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
 
-EP2 (completeText, EngineId, TextCompletionCreate, TextCompletion)
-EP2 (searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
-EP2 (createEmbedding, EngineId, EmbeddingCreate, (OpenAIList Embedding))
 
-EP (createFineTune, FineTuneCreate, FineTune)
-EP0 (listFineTunes, (OpenAIList FineTune))
-EP (getFineTune, FineTuneId, FineTune)
-EP (cancelFineTune, FineTuneId, FineTune)
-EP (listFineTuneEvents, FineTuneId, (OpenAIList FineTuneEvent))
+EP0(listModels, (OpenAIList Model))
+EP1(getModel, ModelId, Model)
 
-EP0 (listEngines, (OpenAIList Engine))
-EP (getEngine, EngineId, Engine)
+EP1(completeText, CompletionCreate, CompletionResponse)
+
+EP1(completeChat, ChatCompletionRequest, ChatResponse)
+
+EP1(createTextEdit, EditCreate, EditResponse)
+
+EP1(generateImage, ImageCreate, ImageResponse)
+EP1(createImageEdit, ImageEditRequest, ImageResponse)
+EP1(createImageVariation, ImageVariationRequest, ImageResponse)
+
+EP1(createEmbedding, EmbeddingCreate, EmbeddingResponse)
+
+EP1(createTranscription, AudioTranscriptionRequest, AudioResponseData)
+EP1(createAudioTranslation, AudioTranslationRequest, AudioResponseData)
 
 createFile :: OpenAIClient -> FileCreate -> IO (Either ClientError File)
 createFile sc rfc =
@@ -138,23 +198,47 @@ createFile sc rfc =
     bnd <- MP.genBoundary
     createFileInternal sc (bnd, rfc)
 
-EP (createFileInternal, (BSL.ByteString, FileCreate), File)
-EP (deleteFile, FileId, FileDeleteConfirmation)
+EP1 (createFileInternal, (BSL.ByteString, FileCreate), File)
+EP1 (deleteFile, FileId, FileDeleteConfirmation)
 
-EP (getAnswer, AnswerReq, AnswerResp)
+EP1 (getAnswer, AnswerReq, AnswerResp)
 
-( listEngines'
-    :<|> getEngine'
-    :<|> completeText'
-    :<|> searchDocuments'
-    :<|> createEmbedding'
-  )
+EP1 (createFineTune, FineTuneCreate, FineTune)
+EP0 (listFineTunes, (OpenAIList FineTune))
+EP1 (getFineTune, FineTuneId, FineTune)
+EP1 (cancelFineTune, FineTuneId, FineTune)
+EP1 (listFineTuneEvents, FineTuneId, (OpenAIList FineTuneEvent))
+
+
+EP0 (listEngines, (OpenAIList Engine))
+EP1 (getEngine, EngineId, Engine)
+EP2 (engineCompleteText, EngineId, TextCompletionCreate, TextCompletion)
+EP2 (searchDocuments, EngineId, SearchResultCreate, (OpenAIList SearchResult))
+EP2 (engineCreateEmbedding, EngineId, EngineEmbeddingCreate, (OpenAIList EngineEmbedding))
+
+
+(      (      listModels'
+         :<|> getModel')
+  :<|> (completeText')
+  :<|> (completeChat')
+  :<|> (createTextEdit')
+  :<|> (      generateImage'
+         :<|> createImageEdit'
+         :<|> createImageVariation')
+  :<|> ( createEmbedding' )
+  :<|> (      createTranscription'
+         :<|> createAudioTranslation')
   :<|> (createFileInternal' :<|> deleteFile')
   :<|> getAnswer'
-  :<|> ( createFineTune'
-           :<|> listFineTunes'
-           :<|> getFineTune'
-           :<|> cancelFineTune'
-           :<|> listFineTuneEvents'
-         ) =
+  :<|> (      createFineTune'
+         :<|> listFineTunes'
+         :<|> getFineTune'
+         :<|> cancelFineTune'
+         :<|> listFineTuneEvents'
+         )
+  :<|> (     listEngines'
+        :<|> getEngine'
+        :<|> engineCompleteText'
+        :<|> searchDocuments'
+        :<|> engineCreateEmbedding')) =
     client api

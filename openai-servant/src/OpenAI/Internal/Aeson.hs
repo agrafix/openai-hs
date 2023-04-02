@@ -2,7 +2,7 @@
 module OpenAI.Internal.Aeson (jsonOpts, deriveJSON, ToJSON, FromJSON) where
 
 import Data.Aeson
-import Data.Aeson.TH
+import Data.Aeson.TH ( deriveJSON )
 import Text.Casing (quietSnake)
 
 jsonOpts :: Int -> Options
