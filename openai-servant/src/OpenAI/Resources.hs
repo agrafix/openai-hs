@@ -1,6 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE TemplateHaskell #-}
 
 module OpenAI.Resources
   ( -- * Core Types
@@ -9,8 +9,8 @@ module OpenAI.Resources
     Usage (..),
 
     -- * Models
-    Model(..),
-    ModelId(..),
+    Model (..),
+    ModelId (..),
 
     -- * Completion
     CompletionCreate (..),
@@ -56,28 +56,17 @@ module OpenAI.Resources
     FineTune (..),
     FineTuneEvent (..),
 
-    -- * Searching (out of date)
-    SearchResult (..),
-    SearchResultCreate (..),
-
     -- * File API (out of date)
     FileCreate (..),
     FileId (..),
     File (..),
     FileHunk (..),
-    SearchHunk (..),
-    ClassificationHunk (..),
     FineTuneHunk (..),
     FileDeleteConfirmation (..),
-
 
     -- * Engine (deprecated)
     EngineId (..),
     Engine (..),
-
-    -- * Engine Answers API (deprecated)
-    AnswerReq (..),
-    AnswerResp (..),
 
     -- * Engine text completion (deprecated)
     TextCompletionId (..),
@@ -139,8 +128,7 @@ instance Applicative OpenAIList where
 $(deriveJSON (jsonOpts 2) ''OpenAIList)
 
 data Usage = Usage
-  {
-    usPromptTokens :: Int,
+  { usPromptTokens :: Int,
     usCompletionTokens :: Int,
     usTotalTokens :: Int
   }
@@ -227,7 +215,6 @@ data CompletionResponse = CompletionResponse
     crUsage :: A.Object
   }
   deriving (Show, Eq)
-
 
 $(deriveJSON (jsonOpts 3) ''CompletionCreate)
 $(deriveJSON (jsonOpts 3) ''CompletionChoice)
@@ -358,7 +345,6 @@ $(deriveJSON (jsonOpts 3) ''ImageResponseData)
 $(deriveJSON (jsonOpts 2) ''ImageResponse)
 
 -- | Image create API
-
 data ImageCreate = ImageCreate
   { icPrompt :: T.Text,
     icN :: Maybe Int,
@@ -371,7 +357,6 @@ data ImageCreate = ImageCreate
 $(deriveJSON (jsonOpts 2) ''ImageCreate)
 
 -- | Image edit API
-
 data ImageEditRequest = ImageEditRequest
   { ierImage :: T.Text,
     ierMask :: Maybe T.Text,
@@ -386,7 +371,6 @@ data ImageEditRequest = ImageEditRequest
 $(deriveJSON (jsonOpts 3) ''ImageEditRequest)
 
 -- | Image variation API
-
 data ImageVariationRequest = ImageVariationRequest
   { ivrImage :: T.Text,
     ivrN :: Maybe Int,
@@ -435,11 +419,9 @@ $(deriveJSON (jsonOpts 4) ''EmbeddingResponseData)
 $(deriveJSON (jsonOpts 4) ''EmbeddingUsage)
 $(deriveJSON (jsonOpts 4) ''EmbeddingResponse)
 
-
 ------------------------
 ------ Audio API
 ------------------------
-
 
 data AudioResponseData = AudioResponseData
   { audrdText :: T.Text
@@ -449,7 +431,6 @@ data AudioResponseData = AudioResponseData
 $(deriveJSON (jsonOpts 5) ''AudioResponseData)
 
 -- | Audio create API
-
 data AudioTranscriptionRequest = AudioTranscriptionRequest
   { audtsrFile :: T.Text,
     audtsrModel :: ModelId,
@@ -460,11 +441,9 @@ data AudioTranscriptionRequest = AudioTranscriptionRequest
   }
   deriving (Show, Eq)
 
-
 $(deriveJSON (jsonOpts 6) ''AudioTranscriptionRequest)
 
 -- | Audio translation API
-
 data AudioTranslationRequest = AudioTranslationRequest
   { audtlrFile :: T.Text,
     audtlrModel :: ModelId,
@@ -476,22 +455,9 @@ data AudioTranslationRequest = AudioTranslationRequest
 
 $(deriveJSON (jsonOpts 6) ''AudioTranslationRequest)
 
-
 ------------------------
 ------ Files API
 ------------------------
-
-data SearchHunk = SearchHunk
-  { shText :: T.Text,
-    shMetadata :: Maybe T.Text
-  }
-  deriving (Show, Eq)
-
-data ClassificationHunk = ClassificationHunk
-  { chText :: T.Text,
-    chLabel :: T.Text
-  }
-  deriving (Show, Eq)
 
 data FineTuneHunk = FineTuneHunk
   { fthPrompt :: T.Text,
@@ -500,15 +466,10 @@ data FineTuneHunk = FineTuneHunk
   deriving (Show, Eq)
 
 data FileHunk
-  = FhSearch SearchHunk
-  | FhClassifications ClassificationHunk
-  | FhFineTune FineTuneHunk
+  = FhFineTune FineTuneHunk
   deriving (Show, Eq)
 
-$(deriveJSON (jsonOpts 2) ''SearchHunk)
-$(deriveJSON (jsonOpts 2) ''ClassificationHunk)
 $(deriveJSON (jsonOpts 3) ''FineTuneHunk)
-
 
 newtype FileId = FileId {unFileId :: T.Text}
   deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
@@ -526,7 +487,6 @@ data File = File
 $(deriveJSON (jsonOpts 1) ''File)
 
 -- | File upload API
-
 data FileCreate = FileCreate
   { fcPurpose :: T.Text,
     fcDocuments :: [FileHunk]
@@ -539,8 +499,6 @@ packDocuments docs =
     map
       ( \t -> A.encode $
           case t of
-            FhSearch x -> A.toJSON x
-            FhClassifications x -> A.toJSON x
             FhFineTune x -> A.toJSON x
       )
       docs
@@ -553,9 +511,7 @@ instance ToMultipart Mem FileCreate where
       [ FileData "file" "data.jsonl" "application/json" (packDocuments $ fcDocuments rfc)
       ]
 
-
 -- | File delete API
-
 data FileDeleteConfirmation = FileDeleteConfirmation
   { fdcId :: FileId
   }
@@ -582,7 +538,6 @@ data Engine = Engine
     eReady :: Bool
   }
   deriving (Show, Eq)
-
 
 $(deriveJSON (jsonOpts 1) ''Engine)
 
@@ -644,7 +599,6 @@ defaultEngineTextCompletionCreate prompt =
 $(deriveJSON (jsonOpts 3) ''TextCompletionChoice)
 $(deriveJSON (jsonOpts 2) ''TextCompletion)
 $(deriveJSON (jsonOpts 4) ''TextCompletionCreate)
-
 
 ------------------------
 ------ EngineEmbeddings API (deprecated)
@@ -715,46 +669,6 @@ data FineTune = FineTune
   }
   deriving (Show, Eq)
 
-data SearchResult = SearchResult
-  { srDocument :: Int,
-    srScore :: Double,
-    srMetadata :: Maybe T.Text
-  }
-  deriving (Show, Eq)
-
-data SearchResultCreate = SearchResultCreate
-  { sccrFile :: Maybe FileId,
-    sccrDocuments :: Maybe (V.Vector T.Text),
-    sccrQuery :: T.Text,
-    sccrReturnMetadata :: Bool
-  }
-  deriving (Show, Eq)
-
-
--- | Answers API
-
-data AnswerReq = AnswerReq
-  { arFile :: Maybe FileId,
-    arDocuments :: Maybe (V.Vector T.Text),
-    arQuestion :: T.Text,
-    arSearchModel :: EngineId,
-    arModel :: EngineId,
-    arExamplesContext :: T.Text,
-    arExamples :: [[T.Text]],
-    arReturnMetadata :: Bool
-  }
-  deriving (Show, Eq)
-
-data AnswerResp = AnswerResp
-  { arsAnswers :: [T.Text]
-  }
-  deriving (Show, Eq)
-
-
-$(deriveJSON (jsonOpts 2) ''SearchResult)
-$(deriveJSON (jsonOpts 4) ''SearchResultCreate)
-$(deriveJSON (jsonOpts 2) ''AnswerReq)
-$(deriveJSON (jsonOpts 3) ''AnswerResp)
 $(deriveJSON (jsonOpts 3) ''FineTuneCreate)
 $(deriveJSON (jsonOpts 3) ''FineTuneEvent)
 $(deriveJSON (jsonOpts 2) ''FineTune)
