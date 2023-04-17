@@ -175,8 +175,20 @@ EP1 (createImageVariation, ImageVariationRequest, ImageResponse)
 
 EP1 (createEmbedding, EmbeddingCreate, EmbeddingResponse)
 
-EP1 (createTranscription, AudioTranscriptionRequest, AudioResponseData)
-EP1 (createAudioTranslation, AudioTranslationRequest, AudioResponseData)
+createTranscription :: OpenAIClient -> AudioTranscriptionRequest -> IO (Either ClientError AudioResponseData)
+createTranscription sc atr =
+  do
+    bnd <- MP.genBoundary
+    createTranscriptionInternal sc (bnd, atr)
+
+createAudioTranslation :: OpenAIClient -> AudioTranslationRequest -> IO (Either ClientError AudioResponseData)
+createAudioTranslation sc atr =
+  do
+    bnd <- MP.genBoundary
+    createAudioTranslationInternal sc (bnd, atr)
+
+EP1 (createTranscriptionInternal, (BSL.ByteString, AudioTranscriptionRequest), AudioResponseData)
+EP1 (createAudioTranslationInternal, (BSL.ByteString, AudioTranslationRequest), AudioResponseData)
 
 createFile :: OpenAIClient -> FileCreate -> IO (Either ClientError File)
 createFile sc rfc =
@@ -209,8 +221,8 @@ EP2 (engineCreateEmbedding, EngineId, EngineEmbeddingCreate, (OpenAIList EngineE
              :<|> createImageVariation'
            )
     :<|> (createEmbedding')
-    :<|> ( createTranscription'
-             :<|> createAudioTranslation'
+    :<|> ( createTranscriptionInternal'
+             :<|> createAudioTranslationInternal'
            )
     :<|> (createFileInternal' :<|> deleteFile')
     :<|> ( createFineTune'

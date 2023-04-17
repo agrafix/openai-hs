@@ -83,10 +83,13 @@ where
 
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
+import Data.Maybe (catMaybes)
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import Data.Time
 import Data.Time.Clock.POSIX
 import qualified Data.Vector as V
+import Network.Mime (defaultMimeLookup)
 import OpenAI.Internal.Aeson
 import Servant.API
 import Servant.Multipart.API
@@ -432,7 +435,7 @@ $(deriveJSON (jsonOpts 5) ''AudioResponseData)
 
 -- | Audio create API
 data AudioTranscriptionRequest = AudioTranscriptionRequest
-  { audtsrFile :: T.Text,
+  { audtsrFile :: FilePath,
     audtsrModel :: ModelId,
     audtsrPrompt :: Maybe T.Text,
     audtsrResponseFormat :: Maybe T.Text,
@@ -441,17 +444,42 @@ data AudioTranscriptionRequest = AudioTranscriptionRequest
   }
   deriving (Show, Eq)
 
+instance ToMultipart Tmp AudioTranscriptionRequest where
+  toMultipart atr =
+    MultipartData
+      (catMaybes
+      [ Input "model" . unModelId <$> Just (audtsrModel atr)
+      , Input "prompt" <$> audtsrPrompt atr
+      , Input "response_format" <$> audtsrResponseFormat atr
+      , Input "temperature" . T.pack . show <$> audtsrTemperature atr
+      , Input "language" <$> audtsrLanguage atr
+      ])
+      [ FileData "file" (T.pack . audtsrFile $ atr) (T.decodeUtf8 . defaultMimeLookup . T.pack $ audtsrFile atr) (audtsrFile atr)
+      ]
+
 $(deriveJSON (jsonOpts 6) ''AudioTranscriptionRequest)
 
 -- | Audio translation API
 data AudioTranslationRequest = AudioTranslationRequest
-  { audtlrFile :: T.Text,
+  { audtlrFile :: FilePath,
     audtlrModel :: ModelId,
     audtlrPrompt :: Maybe T.Text,
     audtlrResponseFormat :: Maybe T.Text,
     audtlrTemperature :: Maybe Double
   }
   deriving (Show, Eq)
+
+instance ToMultipart Tmp AudioTranslationRequest where
+  toMultipart atr =
+    MultipartData
+      (catMaybes
+      [ Input "model" . unModelId <$> Just (audtlrModel atr)
+      , Input "prompt" <$> audtlrPrompt atr
+      , Input "response_format" <$> audtlrResponseFormat atr
+      , Input "temperature" . T.pack . show <$> audtlrTemperature atr
+      ])
+      [ FileData "file" (T.pack . audtlrFile $ atr) (T.decodeUtf8 . defaultMimeLookup . T.pack $ audtlrFile atr) (audtlrFile atr)
+      ]
 
 $(deriveJSON (jsonOpts 6) ''AudioTranslationRequest)
 

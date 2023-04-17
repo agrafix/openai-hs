@@ -54,6 +54,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , casing
+    , mime-types
     , servant
     , servant-multipart-api
     , text
