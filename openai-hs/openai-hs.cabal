@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.1.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8760d75e39a4a6db941c2503a8e8519a3c82b52bad91dcf39594cdd9258c7f4b
+-- hash: b3b520111ed497869a84db66934450f684e12420b3ca3406cd02fb013d8b2596
 
 name:           openai-hs
 version:        0.2.2.0
@@ -58,6 +58,7 @@ library
     , http-types
     , openai-servant >=0.2.1
     , servant
+    , servant-auth-client
     , servant-client
     , servant-multipart-client
     , text
@@ -100,6 +101,7 @@ test-suite openai-hs-test
     , openai-hs
     , openai-servant >=0.2.1
     , servant
+    , servant-auth-client
     , servant-client
     , servant-client-core
     , servant-multipart-client

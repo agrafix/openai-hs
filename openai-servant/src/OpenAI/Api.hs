@@ -3,9 +3,11 @@ module OpenAI.Api where
 
 import OpenAI.Resources
 import Servant.API
+import Servant.Auth
+import Servant.Auth.Client
 import Servant.Multipart.API
 
-type OpenAIAuth = BasicAuth "OpenAI API" ()
+type OpenAIAuth = Auth '[Bearer] ()
 
 type OpenAIApi =
   "v1" :> OpenAIApiInternal

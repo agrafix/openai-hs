@@ -21,6 +21,7 @@ dependencies:
   - casing
   - text
   - servant
+  - servant-auth-client
   - servant-client
   - servant-multipart-client
   - http-client
