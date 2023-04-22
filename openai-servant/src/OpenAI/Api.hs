@@ -44,8 +44,8 @@ type EmbeddingsApi =
   OpenAIAuth :> ReqBody '[JSON] EmbeddingCreate :> Post '[JSON] EmbeddingResponse
 
 type AudioApi =
-  OpenAIAuth :> "transcriptions" :> ReqBody '[JSON] AudioTranscriptionRequest :> Post '[JSON] AudioResponseData
-    :<|> OpenAIAuth :> "translations" :> ReqBody '[JSON] AudioTranslationRequest :> Post '[JSON] AudioResponseData
+  OpenAIAuth :> "transcriptions" :> MultipartForm Tmp AudioTranscriptionRequest :> Post '[JSON] AudioResponseData
+    :<|> OpenAIAuth :> "translations" :> MultipartForm Tmp AudioTranslationRequest :> Post '[JSON] AudioResponseData
 
 type FilesApi =
   OpenAIAuth :> MultipartForm Mem FileCreate :> Post '[JSON] File

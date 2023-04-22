@@ -24,6 +24,7 @@ dependencies:
   - bytestring
   - time
   - vector
+  - mime-types
 
 ghc-options:
   - -Wall
