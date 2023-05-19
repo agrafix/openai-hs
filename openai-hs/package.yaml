@@ -16,7 +16,7 @@ description:         Unofficial OpenAI client
 
 dependencies:
   - base >= 4.7 && < 5
-  - openai-servant >= 0.2.1  
+  - openai-servant >= 0.2.1
   - aeson
   - casing
   - text
@@ -27,6 +27,8 @@ dependencies:
   - bytestring
   - cpphs
   - http-types
+build-tools:
+  - cpphs
 
 ghc-options:
   - -Wall
