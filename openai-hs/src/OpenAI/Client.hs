@@ -108,6 +108,7 @@ module OpenAI.Client
   )
 where
 
+import Control.Monad.IO.Class (MonadIO(..))
 import qualified Data.ByteString.Lazy as BSL
 import Data.Proxy
 import qualified Data.Text as T
@@ -148,18 +149,18 @@ openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
 
 #define EP0(N, R) \
     N##' :: Token -> ClientM R;\
-    N :: OpenAIClient -> IO (Either ClientError R);\
-    N sc = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc)) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N :: MonadIO m => OpenAIClient -> m (Either ClientError R);\
+    N sc = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc)) (mkClientEnv (scManager sc) openaiBaseUrl)
 
 #define EP1(N, ARG, R) \
     N##' :: Token -> ARG -> ClientM R;\
-    N :: OpenAIClient -> ARG -> IO (Either ClientError R);\
-    N sc a = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N :: MonadIO m => OpenAIClient -> ARG -> m (Either ClientError R);\
+    N sc a = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a) (mkClientEnv (scManager sc) openaiBaseUrl)
 
 #define EP2(N, ARG, ARG2, R) \
     N##' :: Token -> ARG -> ARG2 -> ClientM R;\
-    N :: OpenAIClient -> ARG -> ARG2 -> IO (Either ClientError R);\
-    N sc a b = runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N :: MonadIO m => OpenAIClient -> ARG -> ARG2 -> m (Either ClientError R);\
+    N sc a b = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
 
 EP0 (listModels, (OpenAIList Model))
 EP1 (getModel, ModelId, Model)
@@ -176,25 +177,25 @@ EP1 (createImageVariation, ImageVariationRequest, ImageResponse)
 
 EP1 (createEmbedding, EmbeddingCreate, EmbeddingResponse)
 
-createTranscription :: OpenAIClient -> AudioTranscriptionRequest -> IO (Either ClientError AudioResponseData)
+createTranscription :: MonadIO m => OpenAIClient -> AudioTranscriptionRequest -> m (Either ClientError AudioResponseData)
 createTranscription sc atr =
   do
-    bnd <- MP.genBoundary
+    bnd <- liftIO MP.genBoundary
     createTranscriptionInternal sc (bnd, atr)
 
-createAudioTranslation :: OpenAIClient -> AudioTranslationRequest -> IO (Either ClientError AudioResponseData)
+createAudioTranslation :: MonadIO m => OpenAIClient -> AudioTranslationRequest -> m (Either ClientError AudioResponseData)
 createAudioTranslation sc atr =
   do
-    bnd <- MP.genBoundary
+    bnd <- liftIO MP.genBoundary
     createAudioTranslationInternal sc (bnd, atr)
 
 EP1 (createTranscriptionInternal, (BSL.ByteString, AudioTranscriptionRequest), AudioResponseData)
 EP1 (createAudioTranslationInternal, (BSL.ByteString, AudioTranslationRequest), AudioResponseData)
 
-createFile :: OpenAIClient -> FileCreate -> IO (Either ClientError File)
+createFile :: MonadIO m => OpenAIClient -> FileCreate -> m (Either ClientError File)
 createFile sc rfc =
   do
-    bnd <- MP.genBoundary
+    bnd <- liftIO MP.genBoundary
     createFileInternal sc (bnd, rfc)
 
 EP1 (createFileInternal, (BSL.ByteString, FileCreate), File)
