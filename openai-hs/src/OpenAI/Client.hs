@@ -27,6 +27,8 @@ module OpenAI.Client
     completeText,
 
     -- * Chat
+    ChatFunction (..),
+    ChatFunctionCall (..),
     ChatMessage (..),
     ChatCompletionRequest (..),
     ChatChoice (..),
