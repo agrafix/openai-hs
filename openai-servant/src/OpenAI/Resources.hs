@@ -227,15 +227,45 @@ $(deriveJSON (jsonOpts 2) ''CompletionResponse)
 ------ Chat API
 ------------------------
 
+data ChatFunctionCall = ChatFunctionCall
+  { chfcName :: T.Text,
+    chfcArguments :: A.Value
+  }
+  deriving (Eq, Show)
+
+instance A.FromJSON ChatFunctionCall where
+  parseJSON = A.withObject "ChatFunctionCall" $ \obj -> do
+    name <- obj A..: "name"
+    arguments <- obj A..: "arguments" >>=
+                 A.withText "Arguments"
+                 (either fail pure . A.eitherDecode . BSL.fromStrict . T.encodeUtf8)
+    pure $ ChatFunctionCall { chfcName = name, chfcArguments = arguments }
+
+instance A.ToJSON ChatFunctionCall where
+  toJSON (ChatFunctionCall { chfcName = name, chfcArguments = arguments }) =
+    A.object [ "name" A..= name
+             , "arguments" A..= T.decodeUtf8 (BSL.toStrict (A.encode arguments))
+             ]
+
 data ChatMessage = ChatMessage
-  { chmContent :: T.Text,
-    chmRole :: T.Text
+  { chmContent :: Maybe T.Text,
+    chmRole :: T.Text,
+    chmFunctionCall :: Maybe ChatFunctionCall,
+    chmName :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+data ChatFunction = ChatFunction
+  { chfName :: T.Text,
+    chfDescription :: T.Text,
+    chfParameters :: A.Value
   }
   deriving (Show, Eq)
 
 data ChatCompletionRequest = ChatCompletionRequest
   { chcrModel :: ModelId,
     chcrMessages :: [ChatMessage],
+    chcrFunctions :: Maybe [ChatFunction],
     chcrTemperature :: Maybe Double,
     chcrTopP :: Maybe Double,
     chcrN :: Maybe Int,
@@ -254,6 +284,7 @@ defaultChatCompletionRequest model messages =
   ChatCompletionRequest
     { chcrModel = model,
       chcrMessages = messages,
+      chcrFunctions = Nothing,
       chcrTemperature = Nothing,
       chcrTopP = Nothing,
       chcrN = Nothing,
@@ -282,6 +313,7 @@ data ChatResponse = ChatResponse
   }
 
 $(deriveJSON (jsonOpts 3) ''ChatMessage)
+$(deriveJSON (jsonOpts 3) ''ChatFunction)
 $(deriveJSON (jsonOpts 4) ''ChatCompletionRequest)
 $(deriveJSON (jsonOpts 4) ''ChatChoice)
 $(deriveJSON (jsonOpts 3) ''ChatResponse)
