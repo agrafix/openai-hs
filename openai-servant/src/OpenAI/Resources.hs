@@ -19,6 +19,8 @@ module OpenAI.Resources
     defaultCompletionCreate,
 
     -- * Chat
+    ChatFunction (..),
+    ChatFunctionCall (..),
     ChatMessage (..),
     ChatCompletionRequest (..),
     ChatChoice (..),
