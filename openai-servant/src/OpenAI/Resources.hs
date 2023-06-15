@@ -238,9 +238,8 @@ data ChatFunctionCall = ChatFunctionCall
 instance A.FromJSON ChatFunctionCall where
   parseJSON = A.withObject "ChatFunctionCall" $ \obj -> do
     name <- obj A..: "name"
-    arguments <- obj A..: "arguments" >>=
-                 A.withText "Arguments"
-                 (either fail pure . A.eitherDecode . BSL.fromStrict . T.encodeUtf8)
+    arguments <- obj A..: "arguments" >>= A.withEmbeddedJSON "Arguments" pure
+                 
     pure $ ChatFunctionCall { chfcName = name, chfcArguments = arguments }
 
 instance A.ToJSON ChatFunctionCall where
