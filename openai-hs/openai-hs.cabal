@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.1.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b3b520111ed497869a84db66934450f684e12420b3ca3406cd02fb013d8b2596
+-- hash: 7ef8db4f28eb347b36dd01edc4bf2e52f6e66fdb9a247a17e00c311fec44ca1c
 
 name:           openai-hs
-version:        0.2.2.0
+version:        0.3.0.0
 synopsis:       Unofficial OpenAI client
 description:    Unofficial OpenAI client
 category:       Web
@@ -15,7 +15,7 @@ homepage:       https://github.com/agrafix/openai-hs#readme
 bug-reports:    https://github.com/agrafix/openai-hs/issues
 author:         Alexander Thiemann <mail@thiemann.at>
 maintainer:     Alexander Thiemann <mail@thiemann.at>
-copyright:      2021-2022 Alexander Thiemann <mail@thiemann.at>
+copyright:      2021-2023 Alexander Thiemann <mail@thiemann.at>
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -48,6 +48,8 @@ library
       DeriveGeneric
       DeriveFunctor
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
+  build-tools:
+      cpphs
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -87,6 +89,8 @@ test-suite openai-hs-test
       DeriveGeneric
       DeriveFunctor
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates -threaded -rtsopts -with-rtsopts=-N
+  build-tools:
+      cpphs
   build-depends:
       aeson
     , base >=4.7 && <5
