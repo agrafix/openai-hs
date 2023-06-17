@@ -1,10 +1,10 @@
 name:                openai-servant
-version:             0.2.3.0
+version:             0.3.0.0
 github:              "agrafix/openai-hs"
 license:             BSD3
 author:              "Alexander Thiemann <mail@thiemann.at>"
 maintainer:          "Alexander Thiemann <mail@thiemann.at>"
-copyright:           "2021-2022 Alexander Thiemann <mail@thiemann.at>"
+copyright:           "2021-2023 Alexander Thiemann <mail@thiemann.at>"
 
 extra-source-files:
   - README.md

@@ -239,14 +239,15 @@ instance A.FromJSON ChatFunctionCall where
   parseJSON = A.withObject "ChatFunctionCall" $ \obj -> do
     name <- obj A..: "name"
     arguments <- obj A..: "arguments" >>= A.withEmbeddedJSON "Arguments" pure
-                 
-    pure $ ChatFunctionCall { chfcName = name, chfcArguments = arguments }
+
+    pure $ ChatFunctionCall {chfcName = name, chfcArguments = arguments}
 
 instance A.ToJSON ChatFunctionCall where
-  toJSON (ChatFunctionCall { chfcName = name, chfcArguments = arguments }) =
-    A.object [ "name" A..= name
-             , "arguments" A..= T.decodeUtf8 (BSL.toStrict (A.encode arguments))
-             ]
+  toJSON (ChatFunctionCall {chfcName = name, chfcArguments = arguments}) =
+    A.object
+      [ "name" A..= name,
+        "arguments" A..= T.decodeUtf8 (BSL.toStrict (A.encode arguments))
+      ]
 
 data ChatMessage = ChatMessage
   { chmContent :: Maybe T.Text,
@@ -480,13 +481,14 @@ data AudioTranscriptionRequest = AudioTranscriptionRequest
 instance ToMultipart Tmp AudioTranscriptionRequest where
   toMultipart atr =
     MultipartData
-      (catMaybes
-      [ Input "model" . unModelId <$> Just (audtsrModel atr)
-      , Input "prompt" <$> audtsrPrompt atr
-      , Input "response_format" <$> audtsrResponseFormat atr
-      , Input "temperature" . T.pack . show <$> audtsrTemperature atr
-      , Input "language" <$> audtsrLanguage atr
-      ])
+      ( catMaybes
+          [ Input "model" . unModelId <$> Just (audtsrModel atr),
+            Input "prompt" <$> audtsrPrompt atr,
+            Input "response_format" <$> audtsrResponseFormat atr,
+            Input "temperature" . T.pack . show <$> audtsrTemperature atr,
+            Input "language" <$> audtsrLanguage atr
+          ]
+      )
       [ FileData "file" (T.pack . audtsrFile $ atr) (T.decodeUtf8 . defaultMimeLookup . T.pack $ audtsrFile atr) (audtsrFile atr)
       ]
 
@@ -505,12 +507,13 @@ data AudioTranslationRequest = AudioTranslationRequest
 instance ToMultipart Tmp AudioTranslationRequest where
   toMultipart atr =
     MultipartData
-      (catMaybes
-      [ Input "model" . unModelId <$> Just (audtlrModel atr)
-      , Input "prompt" <$> audtlrPrompt atr
-      , Input "response_format" <$> audtlrResponseFormat atr
-      , Input "temperature" . T.pack . show <$> audtlrTemperature atr
-      ])
+      ( catMaybes
+          [ Input "model" . unModelId <$> Just (audtlrModel atr),
+            Input "prompt" <$> audtlrPrompt atr,
+            Input "response_format" <$> audtlrResponseFormat atr,
+            Input "temperature" . T.pack . show <$> audtlrTemperature atr
+          ]
+      )
       [ FileData "file" (T.pack . audtlrFile $ atr) (T.decodeUtf8 . defaultMimeLookup . T.pack $ audtlrFile atr) (audtlrFile atr)
       ]
 
@@ -670,7 +673,7 @@ data EngineEmbeddingCreate = EngineEmbeddingCreate
   deriving (Show, Eq)
 
 data EngineEmbedding = EngineEmbedding
-  {eneEngineEmbedding :: V.Vector Double, eneIndex :: Int}
+  {eneEmbedding :: V.Vector Double, eneIndex :: Int}
   deriving (Show, Eq)
 
 $(deriveJSON (jsonOpts 4) ''EngineEmbeddingCreate)

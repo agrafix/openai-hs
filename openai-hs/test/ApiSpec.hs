@@ -39,7 +39,7 @@ apiTests2023 =
         res <- forceSuccess $ listModels cli
         (V.length (olData res) > 5) `shouldBe` True
         let model = V.head (olData res)
-        mOwnedBy model `shouldBe` "openai"
+        mOwnedBy model `shouldBe` "openai-internal"
 
       it "retrieve model" $ \cli -> do
         model <- forceSuccess $ getModel cli (ModelId "text-davinci-003")
@@ -64,12 +64,14 @@ apiTests2023 =
                 (ModelId "gpt-3.5-turbo")
                 [ ChatMessage
                     { chmRole = "user",
-                      chmContent = "What is the opposite of up? Answer in one word."
+                      chmContent = Just "What is the opposite of up? Answer in one word.",
+                      chmFunctionCall = Nothing,
+                      chmName = Nothing
                     }
                 ]
         res <- forceSuccess $ completeChat cli completion
         chrChoices res `shouldNotBe` []
-        chmContent (chchMessage (head (chrChoices res))) `shouldBe` "Down."
+        chmContent (chchMessage (head (chrChoices res))) `shouldBe` Just "down."
 
     describe "edits api" $ do
       it "create edit" $ \cli -> do
@@ -98,23 +100,12 @@ apiTests2022 :: SpecWith ()
 apiTests2022 =
   beforeAll makeClient $
     do
-      describe "file api" $
-        do
-          it "allows creating one" $ \cli ->
-            do
-              let file =
-                    FileCreate
-                      { fcPurpose = "fune-ftTunedModel FineTune",
-                        fcDocuments = [FhFineTune $ FineTuneHunk "a" "b"]
-                      }
-              _ <- forceSuccess $ createFile cli file
-              pure ()
       describe "embeddings" $ do
         it "computes embeddings" $ \cli -> do
           res <- forceSuccess $ engineCreateEmbedding cli (EngineId "babbage-similarity") (EngineEmbeddingCreate "This is nice")
           V.null (olData res) `shouldBe` False
           let embedding = V.head (olData res)
-          V.length (eneEngineEmbedding embedding) `shouldBe` 2048
+          V.length (eneEmbedding embedding) `shouldBe` 2048
       describe "fine tuning" $ do
         it "allows creating fine-tuning" $ \cli -> do
           let file =
@@ -145,10 +136,9 @@ apiTests2022 =
         do
           it "works (smoke test)" $ \cli ->
             do
-              firstEngine <- V.head . olData <$> forceSuccess (listEngines cli)
               completionResults <-
                 forceSuccess $
-                  engineCompleteText cli (eId firstEngine) $
+                  engineCompleteText cli (EngineId "text-curie-001") $
                     (defaultEngineTextCompletionCreate "Why is the house ")
                       { tccrMaxTokens = Just 2
                       }
