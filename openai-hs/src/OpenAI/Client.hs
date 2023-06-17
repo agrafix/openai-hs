@@ -118,6 +118,7 @@ import OpenAI.Api
 import OpenAI.Client.Internal.Helpers
 import OpenAI.Resources
 import Servant.API
+import Servant.Auth.Client
 import Servant.Client
 import qualified Servant.Multipart.Client as MP
 
@@ -126,7 +127,7 @@ type ApiKey = T.Text
 
 -- | Holds a 'Manager' and your API key.
 data OpenAIClient = OpenAIClient
-  { scBasicAuthData :: BasicAuthData,
+  { scToken :: Token,
     scManager :: Manager,
     scMaxRetries :: Int
   }
@@ -138,7 +139,7 @@ makeOpenAIClient ::
   -- | Number of automatic retries the library should attempt.
   Int ->
   OpenAIClient
-makeOpenAIClient k = OpenAIClient (BasicAuthData "" (T.encodeUtf8 k))
+makeOpenAIClient k = OpenAIClient (Token (T.encodeUtf8 k))
 
 api :: Proxy OpenAIApi
 api = Proxy
@@ -147,19 +148,19 @@ openaiBaseUrl :: BaseUrl
 openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
 
 #define EP0(N, R) \
-    N##' :: BasicAuthData -> ClientM R;\
+    N##' :: Token -> ClientM R;\
     N :: MonadIO m => OpenAIClient -> m (Either ClientError R);\
-    N sc = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc)) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N sc = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc)) (mkClientEnv (scManager sc) openaiBaseUrl)
 
 #define EP1(N, ARG, R) \
-    N##' :: BasicAuthData -> ARG -> ClientM R;\
+    N##' :: Token -> ARG -> ClientM R;\
     N :: MonadIO m => OpenAIClient -> ARG -> m (Either ClientError R);\
-    N sc a = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N sc a = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a) (mkClientEnv (scManager sc) openaiBaseUrl)
 
 #define EP2(N, ARG, ARG2, R) \
-    N##' :: BasicAuthData -> ARG -> ARG2 -> ClientM R;\
+    N##' :: Token -> ARG -> ARG2 -> ClientM R;\
     N :: MonadIO m => OpenAIClient -> ARG -> ARG2 -> m (Either ClientError R);\
-    N sc a b = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scBasicAuthData sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N sc a b = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
 
 EP0 (listModels, (OpenAIList Model))
 EP1 (getModel, ModelId, Model)

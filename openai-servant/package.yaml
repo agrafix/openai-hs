@@ -20,6 +20,8 @@ dependencies:
   - casing
   - text
   - servant
+  - servant-auth
+  - servant-auth-client
   - servant-multipart-api
   - bytestring
   - time
