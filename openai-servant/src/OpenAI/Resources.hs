@@ -257,6 +257,23 @@ data ChatMessage = ChatMessage
   }
   deriving (Show, Eq)
 
+instance A.FromJSON ChatMessage where
+  parseJSON = A.withObject "ChatMessage" $ \obj ->
+    ChatMessage <$> obj A..:? "content"
+                <*> obj A..: "role"
+                <*> obj A..:? "function_call"
+                <*> obj A..:? "name"
+
+instance A.ToJSON ChatMessage where
+  toJSON (ChatMessage {chmContent = content, chmRole = role, chmFunctionCall = functionCall, chmName = name}) =
+    A.object $ 
+      [ "content" A..= content,
+        "role" A..= role
+      ] ++ catMaybes
+      [ ("function_call" A..=) <$> functionCall, 
+        ("name" A..=) <$> name
+      ]
+      
 data ChatFunction = ChatFunction
   { chfName :: T.Text,
     chfDescription :: T.Text,
@@ -314,7 +331,6 @@ data ChatResponse = ChatResponse
     chrUsage :: Usage
   }
 
-$(deriveJSON (jsonOpts 3) ''ChatMessage)
 $(deriveJSON (jsonOpts 3) ''ChatFunction)
 $(deriveJSON (jsonOpts 4) ''ChatCompletionRequest)
 $(deriveJSON (jsonOpts 4) ''ChatChoice)

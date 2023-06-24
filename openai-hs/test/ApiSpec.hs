@@ -72,6 +72,25 @@ apiTests2023 =
         res <- forceSuccess $ completeChat cli completion
         chrChoices res `shouldNotBe` []
         chmContent (chchMessage (head (chrChoices res))) `shouldBe` Just "down."
+      it "'content' is a required property" $ \cli -> do
+        let completion =
+              defaultChatCompletionRequest
+                (ModelId "gpt-3.5-turbo")
+                [ ChatMessage
+                    { chmRole = "assistant",
+                      chmContent = Nothing,
+                      chmFunctionCall = Just $ ChatFunctionCall { chfcName = "f", chfcArguments = "{}" },
+                      chmName = Nothing
+                    },
+                  ChatMessage
+                    { chmRole = "function",
+                      chmContent = Just "x",
+                      chmFunctionCall = Nothing,
+                      chmName = Just "f"
+                    }
+                ]
+        res <- forceSuccess $ completeChat cli completion
+        chrChoices res `shouldNotBe` []
 
     describe "edits api" $ do
       it "create edit" $ \cli -> do
