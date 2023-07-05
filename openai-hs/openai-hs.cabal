@@ -4,10 +4,10 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: a6e8ea2b5e6dfeb26b5108f9c27ce764bb1e9cb495f616829c1a744a4f6fd4ee
+-- hash: d37104a564e8bdbce4dfdc276b621def2716ecaad3d474f0646934fd1b1f034b
 
 name:           openai-hs
-version:        0.3.0.0
+version:        0.3.0.1
 synopsis:       Unofficial OpenAI client
 description:    Unofficial OpenAI client
 category:       Web

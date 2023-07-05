@@ -5,7 +5,7 @@ cabal-version: 1.12
 -- see: https://github.com/sol/hpack
 
 name:           openai-servant
-version:        0.3.0.0
+version:        0.3.0.1
 synopsis:       Unofficial OpenAI servant types
 description:    Unofficial description of the OpenAI API using servant types
 category:       Web
