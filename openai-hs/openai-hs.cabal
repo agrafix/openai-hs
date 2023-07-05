@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 7ef8db4f28eb347b36dd01edc4bf2e52f6e66fdb9a247a17e00c311fec44ca1c
+-- hash: a6e8ea2b5e6dfeb26b5108f9c27ce764bb1e9cb495f616829c1a744a4f6fd4ee
 
 name:           openai-hs
 version:        0.3.0.0
@@ -48,8 +48,6 @@ library
       DeriveGeneric
       DeriveFunctor
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
-  build-tools:
-      cpphs
   build-depends:
       aeson
     , base >=4.7 && <5
@@ -89,8 +87,6 @@ test-suite openai-hs-test
       DeriveGeneric
       DeriveFunctor
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates -threaded -rtsopts -with-rtsopts=-N
-  build-tools:
-      cpphs
   build-depends:
       aeson
     , base >=4.7 && <5

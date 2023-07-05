@@ -29,9 +29,6 @@ dependencies:
   - cpphs
   - http-types
 
-build-tools:
-  - cpphs
-
 ghc-options:
   - -Wall
   - -fwarn-tabs
