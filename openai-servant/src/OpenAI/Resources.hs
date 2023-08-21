@@ -231,23 +231,9 @@ $(deriveJSON (jsonOpts 2) ''CompletionResponse)
 
 data ChatFunctionCall = ChatFunctionCall
   { chfcName :: T.Text,
-    chfcArguments :: A.Value
+    chfcArguments :: T.Text
   }
   deriving (Eq, Show)
-
-instance A.FromJSON ChatFunctionCall where
-  parseJSON = A.withObject "ChatFunctionCall" $ \obj -> do
-    name <- obj A..: "name"
-    arguments <- obj A..: "arguments" >>= A.withEmbeddedJSON "Arguments" pure
-
-    pure $ ChatFunctionCall {chfcName = name, chfcArguments = arguments}
-
-instance A.ToJSON ChatFunctionCall where
-  toJSON (ChatFunctionCall {chfcName = name, chfcArguments = arguments}) =
-    A.object
-      [ "name" A..= name,
-        "arguments" A..= T.decodeUtf8 (BSL.toStrict (A.encode arguments))
-      ]
 
 data ChatMessage = ChatMessage
   { chmContent :: Maybe T.Text,
@@ -256,6 +242,8 @@ data ChatMessage = ChatMessage
     chmName :: Maybe T.Text
   }
   deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 4) ''ChatFunctionCall)
 
 instance A.FromJSON ChatMessage where
   parseJSON = A.withObject "ChatMessage" $ \obj ->
