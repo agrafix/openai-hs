@@ -1,5 +1,6 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 
 module OpenAI.Resources
@@ -21,6 +22,7 @@ module OpenAI.Resources
     -- * Chat
     ChatFunction (..),
     ChatFunctionCall (..),
+    ChatFunctionCallStrategy (..),
     ChatMessage (..),
     ChatCompletionRequest (..),
     ChatChoice (..),
@@ -281,10 +283,30 @@ data ChatFunction = ChatFunction
   }
   deriving (Show, Eq)
 
+data ChatFunctionCallStrategy =
+    CFCS_auto
+  | CFCS_none
+  | CFCS_name T.Text
+  deriving (Show, Eq)
+
+instance ToJSON ChatFunctionCallStrategy where
+  toJSON = \case
+    CFCS_auto              -> A.String "auto"
+    CFCS_none              -> A.String "none"
+    CFCS_name functionName -> A.object [ "name" A..= A.toJSON functionName ]
+
+instance FromJSON ChatFunctionCallStrategy where
+  parseJSON (A.String "auto") = pure CFCS_auto
+  parseJSON (A.String "none") = pure CFCS_none
+  parseJSON xs = flip (A.withObject "ChatFunctionCallStrategy") xs $ \o -> do
+    functionName <- o A..: "name"
+    pure $ CFCS_name functionName
+
 data ChatCompletionRequest = ChatCompletionRequest
   { chcrModel :: ModelId,
     chcrMessages :: [ChatMessage],
     chcrFunctions :: Maybe [ChatFunction],
+    chcrFunctionCall :: Maybe ChatFunctionCallStrategy,
     chcrTemperature :: Maybe Double,
     chcrTopP :: Maybe Double,
     chcrN :: Maybe Int,
@@ -304,6 +326,7 @@ defaultChatCompletionRequest model messages =
     { chcrModel = model,
       chcrMessages = messages,
       chcrFunctions = Nothing,
+      chcrFunctionCall = Nothing,
       chcrTemperature = Nothing,
       chcrTopP = Nothing,
       chcrN = Nothing,
