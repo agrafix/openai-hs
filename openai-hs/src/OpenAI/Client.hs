@@ -6,6 +6,7 @@ module OpenAI.Client
     ApiKey,
     OpenAIClient,
     makeOpenAIClient,
+    makeOpenAIClient',
     ClientError (..),
 
     -- * Helper types
@@ -130,19 +131,29 @@ type ApiKey = T.Text
 
 -- | Holds a 'Manager' and your API key.
 data OpenAIClient = OpenAIClient
-  { scToken :: Token,
+  { scBaseUrl :: BaseUrl,
+    scToken :: Token,
     scManager :: Manager,
     scMaxRetries :: Int
   }
 
 -- | Construct a 'OpenAIClient'. Note that the passed 'Manager' must support https (e.g. via @http-client-tls@)
-makeOpenAIClient ::
+makeOpenAIClient' ::
+  BaseUrl ->
   ApiKey ->
   Manager ->
   -- | Number of automatic retries the library should attempt.
   Int ->
   OpenAIClient
-makeOpenAIClient k = OpenAIClient (Token (T.encodeUtf8 k))
+makeOpenAIClient' u k = OpenAIClient u (Token (T.encodeUtf8 k))
+
+-- | method using default remote base url
+makeOpenAIClient ::
+  ApiKey ->
+  Manager ->
+  Int ->
+  OpenAIClient
+makeOpenAIClient = makeOpenAIClient' openaiBaseUrl
 
 api :: Proxy OpenAIApi
 api = Proxy
@@ -153,17 +164,17 @@ openaiBaseUrl = BaseUrl Https "api.openai.com" 443 ""
 #define EP0(N, R) \
     N##' :: Token -> ClientM R;\
     N :: MonadIO m => OpenAIClient -> m (Either ClientError R);\
-    N sc = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc)) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N sc = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc)) (mkClientEnv (scManager sc) (scBaseUrl sc))
 
 #define EP1(N, ARG, R) \
     N##' :: Token -> ARG -> ClientM R;\
     N :: MonadIO m => OpenAIClient -> ARG -> m (Either ClientError R);\
-    N sc a = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N sc a = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a) (mkClientEnv (scManager sc) (scBaseUrl sc))
 
 #define EP2(N, ARG, ARG2, R) \
     N##' :: Token -> ARG -> ARG2 -> ClientM R;\
     N :: MonadIO m => OpenAIClient -> ARG -> ARG2 -> m (Either ClientError R);\
-    N sc a b = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a b) (mkClientEnv (scManager sc) openaiBaseUrl)
+    N sc a b = liftIO . runRequest (scMaxRetries sc) 0 $ runClientM (N##' (scToken sc) a b) (mkClientEnv (scManager sc) (scBaseUrl sc))
 
 EP0 (listModels, (OpenAIList Model))
 EP1 (getModel, ModelId, Model)
