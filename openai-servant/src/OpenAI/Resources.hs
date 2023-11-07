@@ -52,6 +52,10 @@ module OpenAI.Resources
     AudioResponseData (..),
     AudioTranscriptionRequest (..),
     AudioTranslationRequest (..),
+    TextToSpeechRequest (..),
+    defaultTextToSpeechRequest,
+    TextToSpeechResponse,
+
 
     -- * Fine tuning (out of date)
     FineTuneId (..),
@@ -507,6 +511,30 @@ data AudioResponseData = AudioResponseData
 $(deriveJSON (jsonOpts 5) ''AudioResponseData)
 
 -- | Audio create API
+
+data TextToSpeechRequest = TextToSpeechRequest
+  { ttsModel :: ModelId,
+    ttsInput :: T.Text,
+    ttsVoice :: T.Text,
+    ttsResponseFormat :: Maybe T.Text,
+    ttsSpeed :: Maybe Float
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 3) ''TextToSpeechRequest)
+
+defaultTextToSpeechRequest :: ModelId -> T.Text -> T.Text -> TextToSpeechRequest
+defaultTextToSpeechRequest model voice input =
+  TextToSpeechRequest
+  { ttsModel = model,
+    ttsVoice = voice,
+    ttsInput = input,
+    ttsResponseFormat = Nothing,
+    ttsSpeed = Nothing
+  }
+
+type TextToSpeechResponse = BSL.ByteString
+
 data AudioTranscriptionRequest = AudioTranscriptionRequest
   { audtsrFile :: FilePath,
     audtsrModel :: ModelId,

@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 -- | The API
 module OpenAI.Api where
 
@@ -6,8 +7,23 @@ import Servant.API
 import Servant.Auth
 import Servant.Auth.Client
 import Servant.Multipart.API
+import Data.List.NonEmpty (NonEmpty((:|)))
+import Data.ByteString.Lazy (ByteString)
+import           Network.HTTP.Media ((//))
 
 type OpenAIAuth = Auth '[Bearer] ()
+
+data Audio
+
+instance Accept Audio where
+  contentTypes _ = "audio" // "mpeg" :|
+                 [ "audio" // "opus",
+                   "audio" // "aac",
+                   "audio" // "flac"
+                 ]
+
+instance MimeUnrender Audio ByteString where
+  mimeUnrender _ bs = Right bs
 
 type OpenAIApi =
   "v1" :> OpenAIApiInternal
@@ -46,7 +62,8 @@ type EmbeddingsApi =
   OpenAIAuth :> ReqBody '[JSON] EmbeddingCreate :> Post '[JSON] EmbeddingResponse
 
 type AudioApi =
-  OpenAIAuth :> "transcriptions" :> MultipartForm Tmp AudioTranscriptionRequest :> Post '[JSON] AudioResponseData
+  OpenAIAuth :> "speech" :> ReqBody '[JSON] TextToSpeechRequest :> Post '[Audio] TextToSpeechResponse
+    :<|> OpenAIAuth :> "transcriptions" :> MultipartForm Tmp AudioTranscriptionRequest :> Post '[JSON] AudioResponseData
     :<|> OpenAIAuth :> "translations" :> MultipartForm Tmp AudioTranslationRequest :> Post '[JSON] AudioResponseData
 
 type FilesApi =
