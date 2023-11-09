@@ -27,6 +27,8 @@ dependencies:
   - time
   - vector
   - mime-types
+  - http-media
+
 
 ghc-options:
   - -Wall
