@@ -264,15 +264,16 @@ instance IsString ChatMessageContent where
 instance A.FromJSON ChatMessageContent where
   parseJSON (A.String s) = pure $ ChatMessageContent [CMCP_Text s]
   parseJSON (A.Array a) = ChatMessageContent <$> traverse A.parseJSON (V.toList a)
+  parseJSON invalid = A.typeMismatch "String or Array" invalid
 
 instance A.ToJSON ChatMessageContent where
   toJSON (ChatMessageContent xs) = go xs where
     go []            = A.Array V.empty
     go [CMCP_Text s] = A.String s
-    go xs            = A.Array . V.fromList $ map A.toJSON xs
+    go xs'            = A.Array . V.fromList $ map A.toJSON xs'
 
 data ChatMessageContentPart = CMCP_Text T.Text
-                            | CMCP_ImageUrl T.Text
+                            | CMCP_Image { imageUrl :: T.Text, imageDetail :: Maybe T.Text }
                             deriving (Eq, Show)
 
 instance IsString ChatMessageContentPart where
@@ -282,13 +283,23 @@ instance A.FromJSON ChatMessageContentPart where
   parseJSON (A.String s) = pure $ CMCP_Text s
   parseJSON (A.Object o) = o A..: "type" >>= A.withText "Type" go where
     go "text" = CMCP_Text <$> o A..: "text"
-    go "image_url" = CMCP_ImageUrl <$> o A..: "image_url"
+    go "image_url" = o A..: "image_url" >>= img
     go ty = A.unexpected $ A.String ty
+    img (A.String s) = pure $ CMCP_Image s Nothing
+    img (A.Object o') = CMCP_Image <$> o' A..: "url" <*> o' A..:? "detail"
+    img invalid = A.typeMismatch "String or Object" invalid
   parseJSON invalid = A.typeMismatch "ChatMessageContentPart" invalid
 
 instance A.ToJSON ChatMessageContentPart where
   toJSON (CMCP_Text s) = A.object ["type" A..= ("text" :: T.Text), "text" A..= s]
-  toJSON (CMCP_ImageUrl u) = A.object ["type" A..= ("image_url" :: T.Text), "image_url" A..= u]
+  toJSON (CMCP_Image u d) =
+     A.object [ "type" A..= ("image_url" :: T.Text),
+                "image_url" A..= case d of
+                  Nothing -> A.String u
+                  Just detail -> A.object [ "url" A..= u,
+                                            "detail" A..= detail
+                                          ]
+              ]
 
 data ChatMessage = ChatMessage
   { chmContent :: Maybe ChatMessageContent,
