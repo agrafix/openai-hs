@@ -38,13 +38,6 @@ module OpenAI.Client
     defaultChatCompletionRequest,
     completeChat,
 
-    -- * Edits
-    EditCreate (..),
-    EditChoice (..),
-    EditResponse (..),
-    createTextEdit,
-    defaultEditCreate,
-
     -- * Images
     ImageResponse (..),
     ImageResponseData (..),
@@ -183,8 +176,6 @@ EP1 (completeText, CompletionCreate, CompletionResponse)
 
 EP1 (completeChat, ChatCompletionRequest, ChatResponse)
 
-EP1 (createTextEdit, EditCreate, EditResponse)
-
 EP1 (generateImage, ImageCreate, ImageResponse)
 EP1 (createImageEdit, ImageEditRequest, ImageResponse)
 EP1 (createImageVariation, ImageVariationRequest, ImageResponse)
@@ -231,7 +222,6 @@ EP2 (engineCreateEmbedding, EngineId, EngineEmbeddingCreate, (OpenAIList EngineE
     )
     :<|> (completeText')
     :<|> (completeChat')
-    :<|> (createTextEdit')
     :<|> ( generateImage'
              :<|> createImageEdit'
              :<|> createImageVariation'

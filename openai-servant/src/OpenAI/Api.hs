@@ -16,7 +16,6 @@ type OpenAIApiInternal =
   "models" :> ModelsApi
     :<|> "completions" :> CompletionsApi
     :<|> "chat" :> ChatApi
-    :<|> "edits" :> EditsApi
     :<|> "images" :> ImagesApi
     :<|> "embeddings" :> EmbeddingsApi
     :<|> "audio" :> AudioApi
@@ -33,9 +32,6 @@ type CompletionsApi =
 
 type ChatApi =
   OpenAIAuth :> "completions" :> ReqBody '[JSON] ChatCompletionRequest :> Post '[JSON] ChatResponse
-
-type EditsApi =
-  OpenAIAuth :> ReqBody '[JSON] EditCreate :> Post '[JSON] EditResponse
 
 type ImagesApi =
   OpenAIAuth :> "generations" :> ReqBody '[JSON] ImageCreate :> Post '[JSON] ImageResponse
