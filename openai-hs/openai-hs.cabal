@@ -1,10 +1,10 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.35.2.
+-- This file has been generated from package.yaml by hpack version 0.36.0.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: d37104a564e8bdbce4dfdc276b621def2716ecaad3d474f0646934fd1b1f034b
+-- hash: 07b1c878dc58fbadef2ced7a76a9aee5233a21e8f8b727916096d8888f09cc15
 
 name:           openai-hs
 version:        0.3.0.1
@@ -48,6 +48,8 @@ library
       DeriveGeneric
       DeriveFunctor
   ghc-options: -Wall -fwarn-tabs -fwarn-incomplete-uni-patterns -fwarn-incomplete-record-updates
+  build-tools:
+      cpphs >=1.20
   build-depends:
       aeson
     , base >=4.7 && <5

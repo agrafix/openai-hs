@@ -51,6 +51,7 @@ default-extensions:
 
 library:
   source-dirs: src
+  build-tools: cpphs:cpphs >= 1.20
 
 tests:
   openai-hs-test:
