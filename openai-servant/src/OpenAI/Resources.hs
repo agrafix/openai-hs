@@ -29,12 +29,6 @@ module OpenAI.Resources
     ChatResponse (..),
     defaultChatCompletionRequest,
 
-    -- * Edits
-    EditCreate (..),
-    EditChoice (..),
-    EditResponse (..),
-    defaultEditCreate,
-
     -- * Images
     ImageResponse (..),
     ImageResponseData (..),
@@ -358,49 +352,6 @@ $(deriveJSON (jsonOpts 3) ''ChatFunction)
 $(deriveJSON (jsonOpts 4) ''ChatCompletionRequest)
 $(deriveJSON (jsonOpts 4) ''ChatChoice)
 $(deriveJSON (jsonOpts 3) ''ChatResponse)
-
-------------------------
------- Edits API
-------------------------
-
-data EditCreate = EditCreate
-  { edcrModel :: ModelId,
-    edcrInput :: Maybe T.Text,
-    edcrInstruction :: T.Text,
-    edcrN :: Maybe Int,
-    edcrTemperature :: Maybe Double,
-    edcrTopP :: Maybe Double
-  }
-  deriving (Show, Eq)
-
-defaultEditCreate :: ModelId -> T.Text -> T.Text -> EditCreate
-defaultEditCreate model input instruction =
-  EditCreate
-    { edcrModel = model,
-      edcrInput = Just input,
-      edcrInstruction = instruction,
-      edcrN = Nothing,
-      edcrTemperature = Nothing,
-      edcrTopP = Nothing
-    }
-
-data EditChoice = EditChoice
-  { edchText :: T.Text,
-    edchIndex :: Int
-  }
-  deriving (Show, Eq)
-
-data EditResponse = EditResponse
-  { edrObject :: T.Text,
-    edrCreated :: Int,
-    edrChoices :: [EditChoice],
-    edrUsage :: Usage
-  }
-  deriving (Show, Eq)
-
-$(deriveJSON (jsonOpts 4) ''EditCreate)
-$(deriveJSON (jsonOpts 4) ''EditChoice)
-$(deriveJSON (jsonOpts 3) ''EditResponse)
 
 ------------------------
 ------ Images API

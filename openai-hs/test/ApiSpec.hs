@@ -92,16 +92,6 @@ apiTests2023 =
         res <- forceSuccess $ completeChat cli completion
         chrChoices res `shouldNotBe` []
 
-    describe "edits api" $ do
-      it "create edit" $ \cli -> do
-        let edit =
-              (defaultEditCreate (ModelId "text-davinci-edit-001") "Fox" "Pluralize the word")
-                { edcrN = Just 1
-                }
-        res <- forceSuccess $ createTextEdit cli edit
-        edrChoices res `shouldNotBe` []
-        edchText (head $ edrChoices res) `shouldBe` "Foxes\n"
-
     -- TODO (2023.03.22): Create tests for images, audio APIs
 
     describe "embeddings api" $ do
