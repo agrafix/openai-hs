@@ -1,5 +1,7 @@
 {-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -7,57 +9,95 @@ module OpenAI.Resources
   ( -- * Core Types
     TimeStamp (..),
     OpenAIList (..),
+    Usage (..),
 
-    -- * Engine
-    EngineId (..),
-    Engine (..),
+    -- * Models
+    Model (..),
+    ModelId (..),
 
-    -- * Text completion
-    TextCompletionId (..),
-    TextCompletionChoice (..),
-    TextCompletion (..),
-    TextCompletionCreate (..),
-    defaultTextCompletionCreate,
+    -- * Completion
+    CompletionCreate (..),
+    CompletionChoice (..),
+    CompletionResponse (..),
+    defaultCompletionCreate,
+
+    -- * Chat
+    ChatFunction (..),
+    ChatFunctionCall (..),
+    ChatFunctionCallStrategy (..),
+    ChatMessage (..),
+    ChatCompletionRequest (..),
+    ChatChoice (..),
+    ChatResponse (..),
+    defaultChatCompletionRequest,
+
+    -- * Edits
+    EditCreate (..),
+    EditChoice (..),
+    EditResponse (..),
+    defaultEditCreate,
+
+    -- * Images
+    ImageResponse (..),
+    ImageResponseData (..),
+    ImageCreate (..),
+    ImageEditRequest (..),
+    ImageVariationRequest (..),
 
     -- * Embeddings
     EmbeddingCreate (..),
-    Embedding (..),
+    EmbeddingResponseData (..),
+    EmbeddingUsage (..),
+    EmbeddingResponse (..),
 
-    -- * Fine tuning
+    -- * Audio
+    AudioResponseData (..),
+    AudioTranscriptionRequest (..),
+    AudioTranslationRequest (..),
+
+    -- * Fine tuning (out of date)
     FineTuneId (..),
     FineTuneCreate (..),
     defaultFineTuneCreate,
     FineTune (..),
     FineTuneEvent (..),
 
-    -- * Searching
-    SearchResult (..),
-    SearchResultCreate (..),
-
-    -- * File API
+    -- * File API (out of date)
     FileCreate (..),
     FileId (..),
     File (..),
     FileHunk (..),
-    SearchHunk (..),
-    ClassificationHunk (..),
     FineTuneHunk (..),
     FileDeleteConfirmation (..),
 
-    -- * Answers API
-    AnswerReq (..),
-    AnswerResp (..),
+    -- * Engine (deprecated)
+    EngineId (..),
+    Engine (..),
+
+    -- * Engine text completion (deprecated)
+    TextCompletionId (..),
+    TextCompletionChoice (..),
+    TextCompletion (..),
+    TextCompletionCreate (..),
+    defaultEngineTextCompletionCreate,
+
+    -- * Engine Embeddings (deprecated)
+    EngineEmbeddingCreate (..),
+    EngineEmbedding (..),
   )
 where
 
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
+import Data.Maybe (catMaybes)
 import qualified Data.Text as T
 import Data.String (IsString(..))
 import Data.Time
 import Data.Time.Clock.POSIX
 import qualified Data.Vector as V
+import qualified Data.Text.Encoding as T
 import GHC.Exts (IsList)
+import Network.Mime (defaultMimeLookup)
 import OpenAI.Internal.Aeson
 import Servant.API
 import Servant.Multipart.API
@@ -87,6 +127,509 @@ newtype OpenAIList a = OpenAIList
   deriving stock (Eq, Functor)
   deriving newtype (Applicative, IsList, Monoid, Semigroup, Show)
 
+$(deriveJSON (jsonOpts 2) ''OpenAIList)
+
+data Usage = Usage
+  { usPromptTokens :: Int,
+    usCompletionTokens :: Int,
+    usTotalTokens :: Int
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 2) ''Usage)
+
+------------------------
+------ Model API
+------------------------
+
+data Model = Model
+  { mId :: ModelId,
+    mObject :: T.Text,
+    mOwnedBy :: T.Text,
+    mPermission :: [A.Object] -- TODO 2023.03.22: Docs do not say what this is
+  }
+  deriving (Show, Eq)
+
+newtype ModelId = ModelId {unModelId :: T.Text}
+  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+
+$(deriveJSON (jsonOpts 1) ''Model)
+
+------------------------
+------ Completions API
+------------------------
+
+data CompletionCreate = CompletionCreate
+  { ccrModel :: ModelId,
+    ccrPrompt :: Maybe T.Text,
+    ccrSuffix :: Maybe T.Text,
+    ccrMaxTokens :: Maybe Int,
+    ccrTemperature :: Maybe Double,
+    ccrTopP :: Maybe Double,
+    ccrN :: Maybe Int,
+    ccrStream :: Maybe Bool,
+    ccrLogprobs :: Maybe Int,
+    ccrEcho :: Maybe Bool,
+    ccrStop :: Maybe (V.Vector T.Text),
+    ccrPresencePenalty :: Maybe Double,
+    ccrFrequencyPenalty :: Maybe Double,
+    ccrBestOf :: Maybe Int,
+    ccrLogitBias :: Maybe (V.Vector Double),
+    ccrUser :: Maybe String
+  }
+  deriving (Show, Eq)
+
+defaultCompletionCreate :: ModelId -> T.Text -> CompletionCreate
+defaultCompletionCreate model prompt =
+  CompletionCreate
+    { ccrModel = model,
+      ccrPrompt = Just prompt,
+      ccrSuffix = Nothing,
+      ccrMaxTokens = Nothing,
+      ccrTemperature = Nothing,
+      ccrTopP = Nothing,
+      ccrN = Nothing,
+      ccrStream = Nothing,
+      ccrLogprobs = Nothing,
+      ccrEcho = Nothing,
+      ccrStop = Nothing,
+      ccrPresencePenalty = Nothing,
+      ccrFrequencyPenalty = Nothing,
+      ccrBestOf = Nothing,
+      ccrLogitBias = Nothing,
+      ccrUser = Nothing
+    }
+
+data CompletionChoice = CompletionChoice
+  { cchText :: T.Text,
+    cchIndex :: Int,
+    cchLogprobs :: Maybe (V.Vector Double),
+    cchFinishReason :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+data CompletionResponse = CompletionResponse
+  { crId :: T.Text,
+    crObject :: T.Text,
+    crCreated :: Int,
+    crModel :: ModelId,
+    crChoices :: [CompletionChoice],
+    crUsage :: A.Object
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 3) ''CompletionCreate)
+$(deriveJSON (jsonOpts 3) ''CompletionChoice)
+$(deriveJSON (jsonOpts 2) ''CompletionResponse)
+
+------------------------
+------ Chat API
+------------------------
+
+data ChatFunctionCall = ChatFunctionCall
+  { chfcName :: T.Text,
+    chfcArguments :: A.Value
+  }
+  deriving (Eq, Show)
+
+instance A.FromJSON ChatFunctionCall where
+  parseJSON = A.withObject "ChatFunctionCall" $ \obj -> do
+    name <- obj A..: "name"
+    arguments <- obj A..: "arguments" >>= A.withEmbeddedJSON "Arguments" pure
+
+    pure $ ChatFunctionCall {chfcName = name, chfcArguments = arguments}
+
+instance A.ToJSON ChatFunctionCall where
+  toJSON (ChatFunctionCall {chfcName = name, chfcArguments = arguments}) =
+    A.object
+      [ "name" A..= name,
+        "arguments" A..= T.decodeUtf8 (BSL.toStrict (A.encode arguments))
+      ]
+
+data ChatMessage = ChatMessage
+  { chmContent :: Maybe T.Text,
+    chmRole :: T.Text,
+    chmFunctionCall :: Maybe ChatFunctionCall,
+    chmName :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+instance A.FromJSON ChatMessage where
+  parseJSON = A.withObject "ChatMessage" $ \obj ->
+    ChatMessage <$> obj A..:? "content"
+                <*> obj A..: "role"
+                <*> obj A..:? "function_call"
+                <*> obj A..:? "name"
+
+instance A.ToJSON ChatMessage where
+  toJSON (ChatMessage {chmContent = content, chmRole = role, chmFunctionCall = functionCall, chmName = name}) =
+    A.object $ 
+      [ "content" A..= content,
+        "role" A..= role
+      ] ++ catMaybes
+      [ ("function_call" A..=) <$> functionCall, 
+        ("name" A..=) <$> name
+      ]
+      
+data ChatFunction = ChatFunction
+  { chfName :: T.Text,
+    chfDescription :: T.Text,
+    chfParameters :: A.Value
+  }
+  deriving (Show, Eq)
+
+data ChatFunctionCallStrategy =
+    CFCS_auto
+  | CFCS_none
+  | CFCS_name T.Text
+  deriving (Show, Eq)
+
+instance ToJSON ChatFunctionCallStrategy where
+  toJSON = \case
+    CFCS_auto              -> A.String "auto"
+    CFCS_none              -> A.String "none"
+    CFCS_name functionName -> A.object [ "name" A..= A.toJSON functionName ]
+
+instance FromJSON ChatFunctionCallStrategy where
+  parseJSON (A.String "auto") = pure CFCS_auto
+  parseJSON (A.String "none") = pure CFCS_none
+  parseJSON xs = flip (A.withObject "ChatFunctionCallStrategy") xs $ \o -> do
+    functionName <- o A..: "name"
+    pure $ CFCS_name functionName
+
+data ChatCompletionRequest = ChatCompletionRequest
+  { chcrModel :: ModelId,
+    chcrMessages :: [ChatMessage],
+    chcrFunctions :: Maybe [ChatFunction],
+    chcrFunctionCall :: Maybe ChatFunctionCallStrategy,
+    chcrTemperature :: Maybe Double,
+    chcrTopP :: Maybe Double,
+    chcrN :: Maybe Int,
+    chcrStream :: Maybe Bool,
+    chcrStop :: Maybe (V.Vector T.Text),
+    chcrMaxTokens :: Maybe Int,
+    chcrPresencePenalty :: Maybe Double,
+    chcrFrequencyPenalty :: Maybe Double,
+    chcrLogitBias :: Maybe (V.Vector Double),
+    chcrUser :: Maybe String
+  }
+  deriving (Show, Eq)
+
+defaultChatCompletionRequest :: ModelId -> [ChatMessage] -> ChatCompletionRequest
+defaultChatCompletionRequest model messages =
+  ChatCompletionRequest
+    { chcrModel = model,
+      chcrMessages = messages,
+      chcrFunctions = Nothing,
+      chcrFunctionCall = Nothing,
+      chcrTemperature = Nothing,
+      chcrTopP = Nothing,
+      chcrN = Nothing,
+      chcrStream = Nothing,
+      chcrStop = Nothing,
+      chcrMaxTokens = Nothing,
+      chcrPresencePenalty = Nothing,
+      chcrFrequencyPenalty = Nothing,
+      chcrLogitBias = Nothing,
+      chcrUser = Nothing
+    }
+
+data ChatChoice = ChatChoice
+  { chchIndex :: Int,
+    chchMessage :: ChatMessage,
+    chchFinishReason :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+data ChatResponse = ChatResponse
+  { chrId :: T.Text,
+    chrObject :: T.Text,
+    chrCreated :: Int,
+    chrChoices :: [ChatChoice],
+    chrUsage :: Usage
+  }
+
+$(deriveJSON (jsonOpts 3) ''ChatFunction)
+$(deriveJSON (jsonOpts 4) ''ChatCompletionRequest)
+$(deriveJSON (jsonOpts 4) ''ChatChoice)
+$(deriveJSON (jsonOpts 3) ''ChatResponse)
+
+------------------------
+------ Edits API
+------------------------
+
+data EditCreate = EditCreate
+  { edcrModel :: ModelId,
+    edcrInput :: Maybe T.Text,
+    edcrInstruction :: T.Text,
+    edcrN :: Maybe Int,
+    edcrTemperature :: Maybe Double,
+    edcrTopP :: Maybe Double
+  }
+  deriving (Show, Eq)
+
+defaultEditCreate :: ModelId -> T.Text -> T.Text -> EditCreate
+defaultEditCreate model input instruction =
+  EditCreate
+    { edcrModel = model,
+      edcrInput = Just input,
+      edcrInstruction = instruction,
+      edcrN = Nothing,
+      edcrTemperature = Nothing,
+      edcrTopP = Nothing
+    }
+
+data EditChoice = EditChoice
+  { edchText :: T.Text,
+    edchIndex :: Int
+  }
+  deriving (Show, Eq)
+
+data EditResponse = EditResponse
+  { edrObject :: T.Text,
+    edrCreated :: Int,
+    edrChoices :: [EditChoice],
+    edrUsage :: Usage
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 4) ''EditCreate)
+$(deriveJSON (jsonOpts 4) ''EditChoice)
+$(deriveJSON (jsonOpts 3) ''EditResponse)
+
+------------------------
+------ Images API
+------------------------
+
+data ImageResponseData = ImageResponseData
+  { irdUrl :: T.Text
+  }
+  deriving (Show, Eq)
+
+data ImageResponse = ImageResponse
+  { irCreated :: TimeStamp,
+    irData :: [ImageResponseData]
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 3) ''ImageResponseData)
+$(deriveJSON (jsonOpts 2) ''ImageResponse)
+
+-- | Image create API
+data ImageCreate = ImageCreate
+  { icPrompt :: T.Text,
+    icN :: Maybe Int,
+    icSize :: Maybe T.Text,
+    icResponseFormat :: Maybe T.Text,
+    icUser :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 2) ''ImageCreate)
+
+-- | Image edit API
+data ImageEditRequest = ImageEditRequest
+  { ierImage :: T.Text,
+    ierMask :: Maybe T.Text,
+    ierPrompt :: T.Text,
+    ierN :: Maybe Int,
+    ierSize :: Maybe T.Text,
+    ierResponseFormat :: Maybe T.Text,
+    ierUser :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 3) ''ImageEditRequest)
+
+-- | Image variation API
+data ImageVariationRequest = ImageVariationRequest
+  { ivrImage :: T.Text,
+    ivrN :: Maybe Int,
+    ivrSize :: Maybe T.Text,
+    ivrResponseFormat :: Maybe T.Text,
+    ivrUser :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 3) ''ImageVariationRequest)
+
+------------------------
+------ Embeddings API
+------------------------
+
+data EmbeddingCreate = EmbeddingCreate
+  { embcModel :: ModelId,
+    embcInput :: T.Text, -- TODO (2023.02.23): Extend to allow taking in array of strings or token arrays
+    embcUser :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+data EmbeddingResponseData = EmbeddingResponseData
+  { embdObject :: T.Text,
+    embdEmbedding :: V.Vector Double,
+    embdIndex :: Int
+  }
+  deriving (Show, Eq)
+
+data EmbeddingUsage = EmbeddingUsage
+  { embuPromptTokens :: Int,
+    embuTotalTokens :: Int
+  }
+  deriving (Show, Eq)
+
+data EmbeddingResponse = EmbeddingResponse
+  { embrObject :: T.Text,
+    embrData :: [EmbeddingResponseData],
+    embrModel :: ModelId,
+    embrUsage :: EmbeddingUsage
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 4) ''EmbeddingCreate)
+$(deriveJSON (jsonOpts 4) ''EmbeddingResponseData)
+$(deriveJSON (jsonOpts 4) ''EmbeddingUsage)
+$(deriveJSON (jsonOpts 4) ''EmbeddingResponse)
+
+------------------------
+------ Audio API
+------------------------
+
+data AudioResponseData = AudioResponseData
+  { audrdText :: T.Text
+  }
+  deriving (Show, Eq)
+
+$(deriveJSON (jsonOpts 5) ''AudioResponseData)
+
+-- | Audio create API
+data AudioTranscriptionRequest = AudioTranscriptionRequest
+  { audtsrFile :: FilePath,
+    audtsrModel :: ModelId,
+    audtsrPrompt :: Maybe T.Text,
+    audtsrResponseFormat :: Maybe T.Text,
+    audtsrTemperature :: Maybe Double,
+    audtsrLanguage :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
+instance ToMultipart Tmp AudioTranscriptionRequest where
+  toMultipart atr =
+    MultipartData
+      ( catMaybes
+          [ Input "model" . unModelId <$> Just (audtsrModel atr),
+            Input "prompt" <$> audtsrPrompt atr,
+            Input "response_format" <$> audtsrResponseFormat atr,
+            Input "temperature" . T.pack . show <$> audtsrTemperature atr,
+            Input "language" <$> audtsrLanguage atr
+          ]
+      )
+      [ FileData "file" (T.pack . audtsrFile $ atr) (T.decodeUtf8 . defaultMimeLookup . T.pack $ audtsrFile atr) (audtsrFile atr)
+      ]
+
+$(deriveJSON (jsonOpts 6) ''AudioTranscriptionRequest)
+
+-- | Audio translation API
+data AudioTranslationRequest = AudioTranslationRequest
+  { audtlrFile :: FilePath,
+    audtlrModel :: ModelId,
+    audtlrPrompt :: Maybe T.Text,
+    audtlrResponseFormat :: Maybe T.Text,
+    audtlrTemperature :: Maybe Double
+  }
+  deriving (Show, Eq)
+
+instance ToMultipart Tmp AudioTranslationRequest where
+  toMultipart atr =
+    MultipartData
+      ( catMaybes
+          [ Input "model" . unModelId <$> Just (audtlrModel atr),
+            Input "prompt" <$> audtlrPrompt atr,
+            Input "response_format" <$> audtlrResponseFormat atr,
+            Input "temperature" . T.pack . show <$> audtlrTemperature atr
+          ]
+      )
+      [ FileData "file" (T.pack . audtlrFile $ atr) (T.decodeUtf8 . defaultMimeLookup . T.pack $ audtlrFile atr) (audtlrFile atr)
+      ]
+
+$(deriveJSON (jsonOpts 6) ''AudioTranslationRequest)
+
+------------------------
+------ Files API
+------------------------
+
+data FineTuneHunk = FineTuneHunk
+  { fthPrompt :: T.Text,
+    fthCompletion :: T.Text
+  }
+  deriving (Show, Eq)
+
+data FileHunk
+  = FhFineTune FineTuneHunk
+  deriving stock (Show, Eq)
+
+$(deriveJSON (jsonOpts 3) ''FineTuneHunk)
+
+newtype FileId = FileId {unFileId :: T.Text}
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
+
+data File = File
+  { fId :: FileId,
+    fObject :: T.Text,
+    fBytes :: Int,
+    fCreatedAt :: TimeStamp,
+    fFilename :: T.Text,
+    fPurpose :: T.Text
+  }
+  deriving stock (Show, Eq)
+
+$(deriveJSON (jsonOpts 1) ''File)
+
+-- | File upload API
+data FileCreate = FileCreate
+  { fcPurpose :: T.Text,
+    fcDocuments :: [FileHunk]
+  }
+  deriving stock (Show, Eq)
+
+packDocuments :: [FileHunk] -> BSL.ByteString
+packDocuments docs =
+  BSL.intercalate "\n" $
+    map
+      ( \t -> A.encode $
+          case t of
+            FhFineTune x -> A.toJSON x
+      )
+      docs
+
+instance ToMultipart Mem FileCreate where
+  toMultipart rfc =
+    MultipartData
+      [ Input "purpose" (fcPurpose rfc)
+      ]
+      [ FileData "file" "data.jsonl" "application/json" (packDocuments $ fcDocuments rfc)
+      ]
+
+-- | File delete API
+newtype FileDeleteConfirmation = FileDeleteConfirmation
+  { fdcId :: FileId
+  }
+  deriving stock (Eq)
+  deriving newtype (IsString, Show)
+
+
+$(deriveJSON (jsonOpts 3) ''FileDeleteConfirmation)
+
+-- | File retrieve API
+-- TODO
+
+-- | File retrieve content API
+-- TODO
+
+------------------------
+------ Engine API (deprecated)
+------------------------
+
 newtype EngineId = EngineId {unEngineId :: T.Text}
   deriving stock (Eq)
   deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
@@ -97,6 +640,12 @@ data Engine = Engine
     eReady :: Bool
   }
   deriving stock (Show, Eq)
+
+$(deriveJSON (jsonOpts 1) ''Engine)
+
+------------------------
+------ Engine completions API (deprecated)
+------------------------
 
 newtype TextCompletionId = TextCompletionId {unTextCompletionId :: T.Text}
   deriving stock (Eq)
@@ -134,8 +683,8 @@ data TextCompletionCreate = TextCompletionCreate
   deriving stock (Show, Eq)
 
 -- | Applies API defaults, only passing a prompt.
-defaultTextCompletionCreate :: T.Text -> TextCompletionCreate
-defaultTextCompletionCreate prompt =
+defaultEngineTextCompletionCreate :: T.Text -> TextCompletionCreate
+defaultEngineTextCompletionCreate prompt =
   TextCompletionCreate
     { tccrPrompt = prompt,
       tccrMaxTokens = Nothing,
@@ -150,14 +699,30 @@ defaultTextCompletionCreate prompt =
       tccrBestOf = Nothing
     }
 
-newtype EmbeddingCreate = EmbeddingCreate
-  {ecInput :: T.Text}
+$(deriveJSON (jsonOpts 3) ''TextCompletionChoice)
+$(deriveJSON (jsonOpts 2) ''TextCompletion)
+$(deriveJSON (jsonOpts 4) ''TextCompletionCreate)
+
+------------------------
+------ EngineEmbeddings API (deprecated)
+------------------------
+
+newtype EngineEmbeddingCreate = EngineEmbeddingCreate
+  {enecInput :: T.Text}
   deriving stock (Eq)
   deriving newtype (IsString, Show)
 
-data Embedding = Embedding
-  {eEmbedding :: V.Vector Double, eIndex :: Int}
+data EngineEmbedding = EngineEmbedding
+  {eneEmbedding :: V.Vector Double, eneIndex :: Int}
   deriving stock (Show, Eq)
+
+$(deriveJSON (jsonOpts 4) ''EngineEmbeddingCreate)
+$(deriveJSON (jsonOpts 3) ''EngineEmbedding)
+
+------------------------
+------ Old stuff; not touching
+------ TODO 2023.03.22: Not touching this; unchanged since last year
+------------------------
 
 newtype FineTuneId = FineTuneId {unFineTuneId :: T.Text}
   deriving stock (Eq)
@@ -209,123 +774,6 @@ data FineTune = FineTune
   }
   deriving stock (Show, Eq)
 
-data SearchResult = SearchResult
-  { srDocument :: Int,
-    srScore :: Double,
-    srMetadata :: Maybe T.Text
-  }
-  deriving stock (Show, Eq)
-
-data SearchResultCreate = SearchResultCreate
-  { sccrFile :: Maybe FileId,
-    sccrDocuments :: Maybe (V.Vector T.Text),
-    sccrQuery :: T.Text,
-    sccrReturnMetadata :: Bool
-  }
-  deriving stock (Show, Eq)
-
-data SearchHunk = SearchHunk
-  { shText :: T.Text,
-    shMetadata :: Maybe T.Text
-  }
-  deriving stock (Show, Eq)
-
-data ClassificationHunk = ClassificationHunk
-  { chText :: T.Text,
-    chLabel :: T.Text
-  }
-  deriving stock (Show, Eq)
-
-data FineTuneHunk = FineTuneHunk
-  { fthPrompt :: T.Text,
-    fthCompletion :: T.Text
-  }
-  deriving stock (Show, Eq)
-
-data FileHunk
-  = FhSearch SearchHunk
-  | FhClassifications ClassificationHunk
-  | FhFineTune FineTuneHunk
-  deriving stock (Show, Eq)
-
-data FileCreate = FileCreate
-  { fcPurpose :: T.Text,
-    fcDocuments :: [FileHunk]
-  }
-  deriving stock (Show, Eq)
-
-newtype FileId = FileId {unFileId :: T.Text}
-  deriving stock (Eq)
-  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
-
-data File = File
-  { fId :: FileId,
-    fCreatedAt :: TimeStamp,
-    fStatus :: T.Text,
-    fPurpose :: T.Text
-  }
-  deriving stock (Show, Eq)
-
-newtype FileDeleteConfirmation = FileDeleteConfirmation
-  { fdcId :: FileId
-  }
-  deriving stock (Eq)
-  deriving newtype (IsString, Show)
-
-data AnswerReq = AnswerReq
-  { arFile :: Maybe FileId,
-    arDocuments :: Maybe (V.Vector T.Text),
-    arQuestion :: T.Text,
-    arSearchModel :: EngineId,
-    arModel :: EngineId,
-    arExamplesContext :: T.Text,
-    arExamples :: [[T.Text]],
-    arReturnMetadata :: Bool
-  }
-  deriving stock (Show, Eq)
-
-newtype AnswerResp = AnswerResp
-  { arsAnswers :: [T.Text]
-  }
-  deriving stock (Eq)
-  deriving newtype (IsList, Show)
-
-$(deriveJSON (jsonOpts 2) ''OpenAIList)
-$(deriveJSON (jsonOpts 1) ''Engine)
-$(deriveJSON (jsonOpts 3) ''TextCompletionChoice)
-$(deriveJSON (jsonOpts 2) ''TextCompletion)
-$(deriveJSON (jsonOpts 4) ''TextCompletionCreate)
-$(deriveJSON (jsonOpts 2) ''SearchResult)
-$(deriveJSON (jsonOpts 4) ''SearchResultCreate)
-$(deriveJSON (jsonOpts 1) ''File)
-$(deriveJSON (jsonOpts 3) ''FileDeleteConfirmation)
-$(deriveJSON (jsonOpts 2) ''AnswerReq)
-$(deriveJSON (jsonOpts 3) ''AnswerResp)
-$(deriveJSON (jsonOpts 2) ''EmbeddingCreate)
-$(deriveJSON (jsonOpts 1) ''Embedding)
 $(deriveJSON (jsonOpts 3) ''FineTuneCreate)
 $(deriveJSON (jsonOpts 3) ''FineTuneEvent)
 $(deriveJSON (jsonOpts 2) ''FineTune)
-$(deriveJSON (jsonOpts 2) ''SearchHunk)
-$(deriveJSON (jsonOpts 2) ''ClassificationHunk)
-$(deriveJSON (jsonOpts 3) ''FineTuneHunk)
-
-packDocuments :: [FileHunk] -> BSL.ByteString
-packDocuments docs =
-  BSL.intercalate "\n" $
-    map
-      ( \t -> A.encode $
-          case t of
-            FhSearch x -> A.toJSON x
-            FhClassifications x -> A.toJSON x
-            FhFineTune x -> A.toJSON x
-      )
-      docs
-
-instance ToMultipart Mem FileCreate where
-  toMultipart rfc =
-    MultipartData
-      [ Input "purpose" (fcPurpose rfc)
-      ]
-      [ FileData "file" "data.jsonl" "application/json" (packDocuments $ fcDocuments rfc)
-      ]

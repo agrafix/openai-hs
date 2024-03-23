@@ -1,10 +1,10 @@
 name:                openai-hs
-version:             0.2.2.0
+version:             0.3.0.1
 github:              "agrafix/openai-hs"
 license:             BSD3
 author:              "Alexander Thiemann <mail@thiemann.at>"
 maintainer:          "Alexander Thiemann <mail@thiemann.at>"
-copyright:           "2021-2022 Alexander Thiemann <mail@thiemann.at>"
+copyright:           "2021-2023 Alexander Thiemann <mail@thiemann.at>"
 
 extra-source-files:
   - README.md
@@ -21,6 +21,7 @@ dependencies:
   - casing
   - text
   - servant
+  - servant-auth-client
   - servant-client
   - servant-multipart-client
   - http-client

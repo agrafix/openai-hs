@@ -1,13 +1,11 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
---
--- hash: 27222b6af30e297958d20945ecd4e76ffe7b845bcf5513c5b23251ba3d290b5a
 
 name:           openai-servant
-version:        0.2.3.0
+version:        0.3.0.1
 synopsis:       Unofficial OpenAI servant types
 description:    Unofficial description of the OpenAI API using servant types
 category:       Web
@@ -15,7 +13,7 @@ homepage:       https://github.com/agrafix/openai-hs#readme
 bug-reports:    https://github.com/agrafix/openai-hs/issues
 author:         Alexander Thiemann <mail@thiemann.at>
 maintainer:     Alexander Thiemann <mail@thiemann.at>
-copyright:      2021-2022 Alexander Thiemann <mail@thiemann.at>
+copyright:      2021-2023 Alexander Thiemann <mail@thiemann.at>
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -54,7 +52,10 @@ library
     , base >=4.7 && <5
     , bytestring
     , casing
+    , mime-types
     , servant
+    , servant-auth
+    , servant-auth-client
     , servant-multipart-api
     , text
     , time

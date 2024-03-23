@@ -1,13 +1,13 @@
 cabal-version: 1.12
 
--- This file has been generated from package.yaml by hpack version 0.34.4.
+-- This file has been generated from package.yaml by hpack version 0.35.2.
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: 8760d75e39a4a6db941c2503a8e8519a3c82b52bad91dcf39594cdd9258c7f4b
+-- hash: d37104a564e8bdbce4dfdc276b621def2716ecaad3d474f0646934fd1b1f034b
 
 name:           openai-hs
-version:        0.2.2.0
+version:        0.3.0.1
 synopsis:       Unofficial OpenAI client
 description:    Unofficial OpenAI client
 category:       Web
@@ -15,7 +15,7 @@ homepage:       https://github.com/agrafix/openai-hs#readme
 bug-reports:    https://github.com/agrafix/openai-hs/issues
 author:         Alexander Thiemann <mail@thiemann.at>
 maintainer:     Alexander Thiemann <mail@thiemann.at>
-copyright:      2021-2022 Alexander Thiemann <mail@thiemann.at>
+copyright:      2021-2023 Alexander Thiemann <mail@thiemann.at>
 license:        BSD3
 license-file:   LICENSE
 build-type:     Simple
@@ -58,6 +58,7 @@ library
     , http-types
     , openai-servant >=0.2.1
     , servant
+    , servant-auth-client
     , servant-client
     , servant-multipart-client
     , text
@@ -100,6 +101,7 @@ test-suite openai-hs-test
     , openai-hs
     , openai-servant >=0.2.1
     , servant
+    , servant-auth-client
     , servant-client
     , servant-client-core
     , servant-multipart-client
