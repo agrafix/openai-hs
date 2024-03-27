@@ -150,8 +150,7 @@ $(deriveJSON (jsonOpts 2) ''Usage)
 data Model = Model
   { mId :: ModelId,
     mObject :: T.Text,
-    mOwnedBy :: T.Text,
-    mPermission :: [A.Object] -- TODO 2023.03.22: Docs do not say what this is
+    mOwnedBy :: T.Text
   }
   deriving (Show, Eq)
 
