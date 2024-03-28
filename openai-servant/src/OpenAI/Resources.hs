@@ -1,7 +1,9 @@
+{-# LANGUAGE DerivingStrategies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE InstanceSigs #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module OpenAI.Resources
   ( -- * Core Types
@@ -89,10 +91,12 @@ import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
 import Data.Maybe (catMaybes)
 import qualified Data.Text as T
-import qualified Data.Text.Encoding as T
+import Data.String (IsString(..))
 import Data.Time
 import Data.Time.Clock.POSIX
 import qualified Data.Vector as V
+import qualified Data.Text.Encoding as T
+import GHC.Exts (IsList)
 import Network.Mime (defaultMimeLookup)
 import OpenAI.Internal.Aeson
 import Servant.API
@@ -100,7 +104,7 @@ import Servant.Multipart.API
 
 -- | A 'UTCTime' wrapper that has unix timestamp JSON representation
 newtype TimeStamp = TimeStamp {unTimeStamp :: UTCTime}
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 instance A.ToJSON TimeStamp where
   toJSON = A.Number . fromRational . toRational . utcTimeToPOSIXSeconds . unTimeStamp
@@ -120,17 +124,8 @@ instance ToHttpApiData TimeStamp where
 newtype OpenAIList a = OpenAIList
   { olData :: V.Vector a
   }
-  deriving (Show, Eq, Functor)
-
-instance Semigroup (OpenAIList a) where
-  (<>) a b = OpenAIList (olData a <> olData b)
-
-instance Monoid (OpenAIList a) where
-  mempty = OpenAIList mempty
-
-instance Applicative OpenAIList where
-  pure = OpenAIList . pure
-  (<*>) go x = OpenAIList (olData go <*> olData x)
+  deriving stock (Eq, Functor)
+  deriving newtype (Applicative, IsList, Monoid, Semigroup, Show)
 
 $(deriveJSON (jsonOpts 2) ''OpenAIList)
 
@@ -569,12 +564,13 @@ data FineTuneHunk = FineTuneHunk
 
 data FileHunk
   = FhFineTune FineTuneHunk
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 $(deriveJSON (jsonOpts 3) ''FineTuneHunk)
 
 newtype FileId = FileId {unFileId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data File = File
   { fId :: FileId,
@@ -584,7 +580,7 @@ data File = File
     fFilename :: T.Text,
     fPurpose :: T.Text
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 $(deriveJSON (jsonOpts 1) ''File)
 
@@ -593,7 +589,7 @@ data FileCreate = FileCreate
   { fcPurpose :: T.Text,
     fcDocuments :: [FileHunk]
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 packDocuments :: [FileHunk] -> BSL.ByteString
 packDocuments docs =
@@ -614,10 +610,12 @@ instance ToMultipart Mem FileCreate where
       ]
 
 -- | File delete API
-data FileDeleteConfirmation = FileDeleteConfirmation
+newtype FileDeleteConfirmation = FileDeleteConfirmation
   { fdcId :: FileId
   }
-  deriving (Show, Eq)
+  deriving stock (Eq)
+  deriving newtype (IsString, Show)
+
 
 $(deriveJSON (jsonOpts 3) ''FileDeleteConfirmation)
 
@@ -632,14 +630,15 @@ $(deriveJSON (jsonOpts 3) ''FileDeleteConfirmation)
 ------------------------
 
 newtype EngineId = EngineId {unEngineId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data Engine = Engine
   { eId :: EngineId,
     eOwner :: T.Text,
     eReady :: Bool
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 $(deriveJSON (jsonOpts 1) ''Engine)
 
@@ -648,7 +647,8 @@ $(deriveJSON (jsonOpts 1) ''Engine)
 ------------------------
 
 newtype TextCompletionId = TextCompletionId {unTextCompletionId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data TextCompletionChoice = TextCompletionChoice
   { tccText :: T.Text,
@@ -656,7 +656,7 @@ data TextCompletionChoice = TextCompletionChoice
     tccLogProps :: Maybe Int,
     tccFinishReason :: T.Text
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 data TextCompletion = TextCompletion
   { tcId :: TextCompletionId,
@@ -664,7 +664,7 @@ data TextCompletion = TextCompletion
     tcModel :: T.Text,
     tcChoices :: V.Vector TextCompletionChoice
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 data TextCompletionCreate = TextCompletionCreate
   { tccrPrompt :: T.Text, -- TODO: support lists of strings
@@ -679,7 +679,7 @@ data TextCompletionCreate = TextCompletionCreate
     tccrFrequencyPenalty :: Maybe Double,
     tccrBestOf :: Maybe Int
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 -- | Applies API defaults, only passing a prompt.
 defaultEngineTextCompletionCreate :: T.Text -> TextCompletionCreate
@@ -706,13 +706,14 @@ $(deriveJSON (jsonOpts 4) ''TextCompletionCreate)
 ------ EngineEmbeddings API (deprecated)
 ------------------------
 
-data EngineEmbeddingCreate = EngineEmbeddingCreate
+newtype EngineEmbeddingCreate = EngineEmbeddingCreate
   {enecInput :: T.Text}
-  deriving (Show, Eq)
+  deriving stock (Eq)
+  deriving newtype (IsString, Show)
 
 data EngineEmbedding = EngineEmbedding
   {eneEmbedding :: V.Vector Double, eneIndex :: Int}
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 $(deriveJSON (jsonOpts 4) ''EngineEmbeddingCreate)
 $(deriveJSON (jsonOpts 3) ''EngineEmbedding)
@@ -723,7 +724,8 @@ $(deriveJSON (jsonOpts 3) ''EngineEmbedding)
 ------------------------
 
 newtype FineTuneId = FineTuneId {unFineTuneId :: T.Text}
-  deriving (Show, Eq, ToJSON, FromJSON, ToHttpApiData)
+  deriving stock (Eq)
+  deriving newtype (IsString, ToJSON, FromJSON, ToHttpApiData, Show)
 
 data FineTuneCreate = FineTuneCreate
   { ftcTrainingFile :: FileId,
@@ -737,7 +739,7 @@ data FineTuneCreate = FineTuneCreate
     ftcClassificationNClasses :: Maybe Int,
     ftcClassificationPositiveClass :: Maybe T.Text
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 defaultFineTuneCreate :: FileId -> FineTuneCreate
 defaultFineTuneCreate file =
@@ -759,7 +761,7 @@ data FineTuneEvent = FineTuneEvent
     fteLevel :: T.Text,
     fteMessage :: T.Text
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 data FineTune = FineTune
   { ftId :: FineTuneId,
@@ -769,7 +771,7 @@ data FineTune = FineTune
     ftTunedModel :: Maybe T.Text,
     ftStatus :: T.Text
   }
-  deriving (Show, Eq)
+  deriving stock (Show, Eq)
 
 $(deriveJSON (jsonOpts 3) ''FineTuneCreate)
 $(deriveJSON (jsonOpts 3) ''FineTuneEvent)
