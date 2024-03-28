@@ -38,17 +38,19 @@ apiTests2023 =
       it "list models" $ \cli -> do
         res <- forceSuccess $ listModels cli
         (V.length (olData res) > 5) `shouldBe` True
-        let model = V.head (olData res)
-        mOwnedBy model `shouldBe` "openai-internal"
+        let modelId = ModelId "text-embedding-3-small"
+        case V.find (\m -> mId m == modelId) (olData res) of
+          Nothing -> expectationFailure $ "could not find matching model in response " <> show modelId
+          Just m -> mOwnedBy m `shouldBe` "system"
 
       it "retrieve model" $ \cli -> do
-        model <- forceSuccess $ getModel cli (ModelId "text-davinci-003")
-        mOwnedBy model `shouldBe` "openai-internal"
+        model <- forceSuccess $ getModel cli (ModelId "text-embedding-3-small")
+        mOwnedBy model `shouldBe` "system"
 
     describe "completions api" $ do
       it "create completion" $ \cli -> do
         let completion =
-              (defaultCompletionCreate (ModelId "text-ada-001") "The opposite of up is")
+              (defaultCompletionCreate (ModelId "gpt-3.5-turbo-instruct") "The opposite of up is")
                 { ccrMaxTokens = Just 1,
                   ccrTemperature = Just 0.1,
                   ccrN = Just 1
@@ -64,14 +66,14 @@ apiTests2023 =
                 (ModelId "gpt-3.5-turbo")
                 [ ChatMessage
                     { chmRole = "user",
-                      chmContent = Just "What is the opposite of up? Answer in one word.",
+                      chmContent = Just "What is the opposite of up? Answer in one word with no punctuation.",
                       chmFunctionCall = Nothing,
                       chmName = Nothing
                     }
                 ]
         res <- forceSuccess $ completeChat cli completion
         chrChoices res `shouldNotBe` []
-        chmContent (chchMessage (head (chrChoices res))) `shouldBe` Just "down."
+        chmContent (chchMessage (head (chrChoices res))) `shouldBe` Just "down"
       it "'content' is a required property" $ \cli -> do
         let completion =
               defaultChatCompletionRequest
