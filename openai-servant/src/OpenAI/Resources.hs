@@ -296,6 +296,11 @@ instance FromJSON ChatFunctionCallStrategy where
     functionName <- o A..: "name"
     pure $ CFCS_name functionName
 
+data ChatResponseFormat = ChatResponseFormat
+  { crfType :: Maybe T.Text
+  }
+  deriving (Show, Eq)
+
 data ChatCompletionRequest = ChatCompletionRequest
   { chcrModel :: ModelId,
     chcrMessages :: [ChatMessage],
@@ -310,7 +315,8 @@ data ChatCompletionRequest = ChatCompletionRequest
     chcrPresencePenalty :: Maybe Double,
     chcrFrequencyPenalty :: Maybe Double,
     chcrLogitBias :: Maybe (V.Vector Double),
-    chcrUser :: Maybe String
+    chcrUser :: Maybe String,
+    chcrResponseFormat :: Maybe ChatResponseFormat
   }
   deriving (Show, Eq)
 
@@ -330,7 +336,8 @@ defaultChatCompletionRequest model messages =
       chcrPresencePenalty = Nothing,
       chcrFrequencyPenalty = Nothing,
       chcrLogitBias = Nothing,
-      chcrUser = Nothing
+      chcrUser = Nothing,
+      chcrResponseFormat = Nothing
     }
 
 data ChatChoice = ChatChoice
@@ -348,6 +355,7 @@ data ChatResponse = ChatResponse
     chrUsage :: Usage
   }
 
+$(deriveJSON (jsonOpts 3) ''ChatResponseFormat)
 $(deriveJSON (jsonOpts 3) ''ChatFunction)
 $(deriveJSON (jsonOpts 4) ''ChatCompletionRequest)
 $(deriveJSON (jsonOpts 4) ''ChatChoice)
