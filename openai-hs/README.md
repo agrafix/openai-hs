@@ -27,10 +27,13 @@ request :: ChatCompletionRequest
 request = ChatCompletionRequest 
          { chcrModel = ModelId "gpt-3.5-turbo"
          , chcrMessages = 
-            [ChatMessage { chmContent = "Write a hello world program in Haskell"
+            [ChatMessage { chmContent = Just "Write a hello world program in Haskell"
                          , chmRole = "user"
+                         , chmFunctionCall = Nothing
+                         , chmName = Nothing
                          }
             ]
+         , chcrFunctions = Nothing
          , chcrTemperature = Nothing
          , chcrTopP = Nothing
          , chcrN = Nothing
