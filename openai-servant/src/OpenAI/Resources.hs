@@ -156,7 +156,7 @@ newtype ModelId = ModelId {unModelId :: T.Text}
 $(deriveJSON (jsonOpts 1) ''Model)
 
 ------------------------
------- Completions API
+------ Completions API (legacy)
 ------------------------
 
 data CompletionCreate = CompletionCreate
@@ -305,6 +305,7 @@ data ChatCompletionRequest = ChatCompletionRequest
     chcrTemperature :: Maybe Double,
     chcrTopP :: Maybe Double,
     chcrN :: Maybe Int,
+    chcrSeed :: Maybe Int,
     chcrStream :: Maybe Bool,
     chcrStop :: Maybe (V.Vector T.Text),
     chcrMaxTokens :: Maybe Int,
@@ -347,6 +348,7 @@ defaultChatCompletionRequest model messages =
       chcrTemperature = Nothing,
       chcrTopP = Nothing,
       chcrN = Nothing,
+      chcrSeed = Nothing,
       chcrStream = Nothing,
       chcrStop = Nothing,
       chcrMaxTokens = Nothing,
