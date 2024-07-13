@@ -113,7 +113,7 @@ apiTests2022 =
     do
       describe "embeddings" $ do
         it "computes embeddings" $ \cli -> do
-          res <- forceSuccess $ engineCreateEmbedding cli (EngineId "babbage-similarity") (EngineEmbeddingCreate "This is nice")
+          res <- forceSuccess $ engineCreateEmbedding cli (EngineId "text-embedding-3-small") (EngineEmbeddingCreate "This is nice")
           V.null (olData res) `shouldBe` False
           let embedding = V.head (olData res)
           V.length (eneEmbedding embedding) `shouldBe` 2048
@@ -149,7 +149,7 @@ apiTests2022 =
             do
               completionResults <-
                 forceSuccess $
-                  engineCompleteText cli (EngineId "text-curie-001") $
+                  engineCompleteText cli (EngineId "gpt-3.5-turbo-instruct") $
                     (defaultEngineTextCompletionCreate "Why is the house ")
                       { tccrMaxTokens = Just 2
                       }
