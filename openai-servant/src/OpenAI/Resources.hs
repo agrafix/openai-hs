@@ -133,6 +133,12 @@ data Usage = Usage
 
 $(deriveJSON (jsonOpts 2) ''Usage)
 
+instance Semigroup Usage where
+  Usage a1 a2 a3 <> Usage b1 b2 b3 = Usage (a1 + b1) (a2 + b2) (a3 + b3)
+
+instance Monoid Usage where
+  mempty = Usage 0 0 0
+
 ------------------------
 ------ Model API
 ------------------------
