@@ -35,7 +35,7 @@ module OpenAI.Client
     ChatCompletionRequest (..),
     ChatChoice (..),
     ChatResponse (..),
-    ResponseFormat(..),
+    ChatResponseFormat(..),
     defaultChatCompletionRequest,
     completeChat,
 

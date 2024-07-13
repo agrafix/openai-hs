@@ -29,7 +29,7 @@ module OpenAI.Resources
     ChatCompletionRequest (..),
     ChatChoice (..),
     ChatResponse (..),
-    ResponseFormat(..),
+    ChatResponseFormat(..),
     defaultChatCompletionRequest,
 
     -- * Edits
@@ -309,25 +309,25 @@ data ChatCompletionRequest = ChatCompletionRequest
     chcrStop :: Maybe (V.Vector T.Text),
     chcrMaxTokens :: Maybe Int,
     chcrPresencePenalty :: Maybe Double,
-    chcrResponseFormat :: Maybe ResponseFormat,
+    chcrResponseFormat :: Maybe ChatResponseFormat,
     chcrFrequencyPenalty :: Maybe Double,
     chcrLogitBias :: Maybe (V.Vector Double),
     chcrUser :: Maybe String
   }
   deriving (Show, Eq)
 
-data ResponseFormat
+data ChatResponseFormat
   = RF_text
   | RF_json_object
   deriving (Show, Eq)
 
-instance ToJSON ResponseFormat where
+instance ToJSON ChatResponseFormat where
   toJSON = \case
     RF_text        -> A.object [ "type" A..= A.String "text" ]
     RF_json_object -> A.object [ "type" A..= A.String "json_object" ]
 
-instance FromJSON ResponseFormat where
-  parseJSON = A.withObject "ResponseFormat" $ \o -> do
+instance FromJSON ChatResponseFormat where
+  parseJSON = A.withObject "ChatResponseFormat" $ \o -> do
     rt <- o A..: "type"
     case rt of
       "text"
@@ -335,7 +335,7 @@ instance FromJSON ResponseFormat where
       "json_object"
         -> pure RF_json_object
       xs
-        -> fail $ "ResponseFormat unexpected type: " <> T.unpack xs
+        -> fail $ "ChatResponseFormat unexpected type: " <> T.unpack xs
 
 defaultChatCompletionRequest :: ModelId -> [ChatMessage] -> ChatCompletionRequest
 defaultChatCompletionRequest model messages =
