@@ -42,6 +42,7 @@ module OpenAI.Client
     -- * Images
     ImageResponse (..),
     ImageResponseData (..),
+    ImageResponseFormat (..),
     ImageCreate (..),
     ImageEditRequest (..),
     ImageVariationRequest (..),

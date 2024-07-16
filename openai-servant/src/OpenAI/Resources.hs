@@ -35,6 +35,7 @@ module OpenAI.Resources
     -- * Images
     ImageResponse (..),
     ImageResponseData (..),
+    ImageResponseFormat (..),
     ImageCreate (..),
     ImageEditRequest (..),
     ImageVariationRequest (..),
@@ -82,6 +83,7 @@ module OpenAI.Resources
   )
 where
 
+import Control.Applicative ((<|>))
 import qualified Data.Aeson as A
 import qualified Data.ByteString.Lazy as BSL
 import Data.Maybe (catMaybes)
@@ -381,10 +383,21 @@ $(deriveJSON (jsonOpts 3) ''ChatResponse)
 ------ Images API
 ------------------------
 
-data ImageResponseData = ImageResponseData
-  { irdUrl :: T.Text
-  }
+data ImageResponseData
+  = IRD_url T.Text
+  | IRD_b64_json T.Text
   deriving (Show, Eq)
+
+instance ToJSON ImageResponseData where
+  toJSON = \case
+    IRD_url d      -> A.object [ "url" A..= A.String d ]
+    IRD_b64_json d -> A.object [ "b64_json" A..= A.String d ]
+
+instance FromJSON ImageResponseData where
+  parseJSON = A.withObject "ImageResponseData" $ \o ->
+    (IRD_url      <$> (o A..: "url")) <|>
+    (IRD_b64_json <$> (o A..: "b64_json")) <|>
+    fail "ImageResponseData unexpected data"
 
 data ImageResponse = ImageResponse
   { irCreated :: TimeStamp,
@@ -392,15 +405,35 @@ data ImageResponse = ImageResponse
   }
   deriving (Show, Eq)
 
-$(deriveJSON (jsonOpts 3) ''ImageResponseData)
 $(deriveJSON (jsonOpts 2) ''ImageResponse)
+
+data ImageResponseFormat
+  = IRF_url
+  | IRF_b64_json
+  deriving (Show, Eq)
+
+instance ToJSON ImageResponseFormat where
+  toJSON = \case
+    IRF_url      -> A.String "url"
+    IRF_b64_json -> A.String "b64_json"
+
+instance FromJSON ImageResponseFormat where
+  parseJSON = A.withText "ImageResponseFormat" $ \t -> do
+    case t of
+      "url"
+        -> pure IRF_url
+      "b64_json"
+        -> pure IRF_b64_json
+      xs
+        -> fail $ "ImageResponseFormat unexpected type: " <> T.unpack xs
 
 -- | Image create API
 data ImageCreate = ImageCreate
   { icPrompt :: T.Text,
+    icModel :: Maybe ModelId,
     icN :: Maybe Int,
     icSize :: Maybe T.Text,
-    icResponseFormat :: Maybe T.Text,
+    icResponseFormat :: Maybe ImageResponseFormat,
     icUser :: Maybe T.Text
   }
   deriving (Show, Eq)
