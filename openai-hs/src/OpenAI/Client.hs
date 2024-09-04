@@ -63,6 +63,11 @@ module OpenAI.Client
     AudioTranslationRequest (..),
     createTranscription,
     createAudioTranslation,
+    TextToSpeechRequest(..),
+    defaultTextToSpeechRequest,
+    TextToSpeechResponse,
+    createTextToSpeech,
+
 
     -- * Engine (deprecated)
     EngineId (..),
@@ -196,6 +201,7 @@ createAudioTranslation sc atr =
     bnd <- liftIO MP.genBoundary
     createAudioTranslationInternal sc (bnd, atr)
 
+EP1 (createTextToSpeech, TextToSpeechRequest, TextToSpeechResponse)
 EP1 (createTranscriptionInternal, (BSL.ByteString, AudioTranscriptionRequest), AudioResponseData)
 EP1 (createAudioTranslationInternal, (BSL.ByteString, AudioTranslationRequest), AudioResponseData)
 
@@ -229,7 +235,8 @@ EP2 (engineCreateEmbedding, EngineId, EngineEmbeddingCreate, (OpenAIList EngineE
              :<|> createImageVariation'
            )
     :<|> (createEmbedding')
-    :<|> ( createTranscriptionInternal'
+    :<|> (createTextToSpeech'
+             :<|> createTranscriptionInternal'
              :<|> createAudioTranslationInternal'
            )
     :<|> (createFileInternal' :<|> deleteFile')
