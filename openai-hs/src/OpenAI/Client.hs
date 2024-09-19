@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-{-# OPTIONS_GHC -cpp -pgmPcpphs -optP--cpp #-}
+{-# OPTIONS_GHC -cpp -pgmP "cpphs --cpp" #-}
 
 module OpenAI.Client
   ( -- * Basics
